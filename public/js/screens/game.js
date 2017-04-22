@@ -3,6 +3,9 @@ define([
 ], function(
    TerrainHelper
 ) {
+   var MinimapFrame = new Image();
+       MinimapFrame.src = './images/frame.png'
+
    return Juicy.State.extend({
       constructor: function(connection) {
          this.connection = connection;
@@ -15,11 +18,7 @@ define([
          connection.on('remake', this.fetch.bind(this));
 
          connection.on('update', function(info) {
-            var index = info[0];
-            var value = info[1];
-
-            self.world.tiles[index] = value;
-            self.updated = true;
+            self.updateTile(info[0], info[1]);
          });
 
          this.cooldown = 0.2;
@@ -35,31 +34,54 @@ define([
 
          this.canvas = document.createElement('canvas');
          this.context = this.canvas.getContext('2d');
+
+         this.minimap = document.createElement('canvas');
+         this.minimapPixels = null;
       },
 
       init: function() {
 
       },
 
-      updateMap: function(index) {
-         // TODO maybe later i guess
-         // if (!index) {
-         //    // Update the whole map
-         //    this.canvas.width = this.world.width * TerrainHelper.tilesize;
-         //    this.canvas.height = this.world.height * TerrainHelper.tilesize;
-         //    this.context.clearRect(0, 0, this.canvas.width, this.canvas.height);
+      getMinimapColor: function(tile) {
+         var colors = [[47, 129, 54, 255], [21, 108, 153, 255], [0, 0, 0, 255]];
 
-         //    for (var i = 0; i < this.canvas.width * this.canvas.height; i ++) {
+         return colors[Math.min(tile, colors.length - 1)];
+      },
 
-         //    }
-         // }
+      setMinimapPixel: function(index, tile) {
+         var pixels = this.minimapPixels.data;
+         var color = this.getMinimapColor(tile);
+
+         pixels[4 * index] = color[0];
+         pixels[4 * index + 1] = color[1];
+         pixels[4 * index + 2] = color[2];
+         pixels[4 * index + 3] = color[3];
+      },
+
+      updateTile: function(index, value) {
+         this.world.tiles[index] = value;
+         this.setMinimapPixel(index, value);
+         this.updated = true;
+      },
+
+      generateMinimap: function() {
+         var self = this;
+         this.world.tiles.forEach(function(tile, index) {
+            self.setMinimapPixel(index, tile);
+         });
       },
 
       fetch: function() {
          var self = this;
-         $.get('/api/world').then(function(response) {
-            self.world = response;
+         $.get('/api/world').then(function(world) {
+            self.world = world;
             self.updated = true;
+
+            self.minimap.width = world.width;
+            self.minimap.height = world.height;
+            self.minimapPixels = new ImageData(new Uint8ClampedArray(4 * world.width * world.height), world.width, world.height);
+            self.generateMinimap();
          });
       },
 
@@ -104,8 +126,7 @@ define([
          }
 
          var index = point.x + point.y * this.world.width;
-         this.world.tiles[index] = (this.world.tiles[index] + 1) % 2;
-         this.updated = true;
+         this.updateTile(index, (this.world.tiles[index] + 1) % 2);
          this.lastDrag = point;
 
          this.connection.emit('activate', index);
@@ -146,6 +167,9 @@ define([
             return;
          }
 
+         // Draw minimap
+         this.minimap.getContext('2d').putImageData(this.minimapPixels, 0, 0);
+
          if (this.camera.x < 0)
             this.camera.x = 0;
          if (this.camera.y < 0)
@@ -158,7 +182,7 @@ define([
          var min_x = Math.floor(this.camera.x);
          var min_y = Math.floor(this.camera.y);
 
-         for (var i = min_x; (i - min_x) * TerrainHelper.tilesize < width; i ++) {
+         for (var i = min_x; (i - min_x) * TerrainHelper.tilesize <= width + 3 /* ???? */; i ++) {
             for (var j = min_y; (j - min_y) * TerrainHelper.tilesize < height; j ++) {
                TerrainHelper.draw(context, 
                                   i - this.camera.x, 
@@ -167,6 +191,24 @@ define([
                                   i, 
                                   j);
             }
+         }
+
+         if (this.minimap) {
+            var scale = 2;
+            var minimap_x = width - this.minimap.width * scale - 4;
+            var minimap_y = 4;
+
+            context.drawImage(MinimapFrame, minimap_x - 4, minimap_y - 4);
+            context.drawImage(this.minimap, 
+                              minimap_x, 
+                              minimap_y,
+                              this.minimap.width * scale,
+                              this.minimap.height * scale);
+
+            var viewport_w = scale * Math.floor(width / TerrainHelper.tilesize);
+            var viewport_h = scale * Math.floor(height / TerrainHelper.tilesize);
+            context.fillStyle = 'rgba(0, 0, 0, 0.3)';
+            context.fillRect(minimap_x + scale * this.camera.x, minimap_y + scale * this.camera.y, viewport_w, viewport_h);
          }
       }
    })

@@ -48,27 +48,22 @@ body {
   margin-top: -40px;
 }
 
-#overlay {
+.overlay {
   background: rgba(0, 0, 0, 0.7);
+  color: white;
+  padding: 20px;
   position: fixed;
-  height: 100%;
-  width: 100%;
   z-index: 100;
 }
 
-#overlay > div {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  margin-top: -220px;
-  margin-left: -150px;
-  width: 300px;
-
-  color: white;
+.overlay h2 {
+  font-weight: normal;
+  margin: 0;
 }
 
-#overlay h2 {
-  font-weight: normal;
+.top-right {
+  top: 0;
+  right: 0;
 }
 
 img {
