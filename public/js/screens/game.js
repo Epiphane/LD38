@@ -1,4 +1,8 @@
-define([], function() {
+define([
+   'helpers/terrain'
+], function(
+   TerrainHelper
+) {
    return Juicy.State.extend({
       constructor: function(connection) {
          this.connection = connection;
@@ -20,10 +24,35 @@ define([], function() {
 
          this.cooldown = 0.2;
          this.timer = 0;
+
+         if (!TerrainHelper.ready()) {
+            TerrainHelper.onReady(function() {
+               self.updated = true;
+            });
+         }
+
+         this.camera = new Juicy.Point();
+
+         this.canvas = document.createElement('canvas');
+         this.context = this.canvas.getContext('2d');
       },
 
       init: function() {
 
+      },
+
+      updateMap: function(index) {
+         // TODO maybe later i guess
+         // if (!index) {
+         //    // Update the whole map
+         //    this.canvas.width = this.world.width * TerrainHelper.tilesize;
+         //    this.canvas.height = this.world.height * TerrainHelper.tilesize;
+         //    this.context.clearRect(0, 0, this.canvas.width, this.canvas.height);
+
+         //    for (var i = 0; i < this.canvas.width * this.canvas.height; i ++) {
+
+         //    }
+         // }
       },
 
       fetch: function() {
@@ -42,11 +71,23 @@ define([], function() {
          if (!this.world)
             return;
 
-         // if (this.timer <= 0) {
-            // this.activate(new Juicy.Point(Math.random() * 400, Math.random() * 400));
-            // this.timer = this.cooldown;
-         // }
-         // this.timer -= dt;
+         var speed = 55;
+         if (game.keyDown('LEFT')) {
+            this.camera.x -= speed * dt;
+            this.updated = true;
+         }
+         if (game.keyDown('RIGHT')) {
+            this.camera.x += speed * dt;
+            this.updated = true;
+         }
+         if (game.keyDown('UP')) {
+            this.camera.y -= speed * dt;
+            this.updated = true;
+         }
+         if (game.keyDown('DOWN')) {
+            this.camera.y += speed * dt;
+            this.updated = true;
+         }
 
          return true; // Don't rerender
       },
@@ -55,8 +96,8 @@ define([], function() {
          if (!this.world)
             return;
 
-         point.x = Math.floor(point.x / 40);
-         point.y = Math.floor(point.y / 40);
+         point.x = Math.floor(point.x / TerrainHelper.tilesize + this.camera.x);
+         point.y = Math.floor(point.y / TerrainHelper.tilesize + this.camera.y);
 
          if (this.lastDrag && point.isEqual(this.lastDrag)) {
             return;
@@ -76,7 +117,7 @@ define([], function() {
 
       drag: function(point) {
          this.activate(point);
-      },
+      }, 
 
       dragend: function(point) {
          this.lastDrag = null;
@@ -88,17 +129,30 @@ define([], function() {
       },
 
       render: function(context, width, height) {
-         if (!this.world) {
+         if (!this.world || !TerrainHelper.ready) {
             return;
          }
 
-         var colors = ['teal', 'green', 'red', 'yellow', 'white', 'pink', 'purple', 'blue'];
+         if (this.camera.x < 0)
+            this.camera.x = 0;
+         if (this.camera.y < 0)
+            this.camera.y = 0;
+         if (this.camera.x + width / TerrainHelper.tilesize > this.world.width)
+            this.camera.x = this.world.width - width / TerrainHelper.tilesize;
+         if (this.camera.y + height / TerrainHelper.tilesize > this.world.height)
+            this.camera.y = this.world.height - height / TerrainHelper.tilesize;
 
-         var tilesize = 40;
-         for (var i = 0; i < this.world.width; i ++) {
-            for (var j = 0; j < this.world.height; j ++) {
-               context.fillStyle = colors[this.world.tiles[i + j * this.world.width] % 8];
-               context.fillRect(i * tilesize, j * tilesize, tilesize, tilesize);
+         var min_x = Math.floor(this.camera.x);
+         var min_y = Math.floor(this.camera.y);
+
+         for (var i = min_x; (i - min_x) * TerrainHelper.tilesize < width; i ++) {
+            for (var j = min_y; (j - min_y) * TerrainHelper.tilesize < height; j ++) {
+               TerrainHelper.draw(context, 
+                                  i - this.camera.x, 
+                                  j - this.camera.y, 
+                                  this.world, 
+                                  i, 
+                                  j);
             }
          }
       }

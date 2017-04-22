@@ -33,7 +33,6 @@ module.exports = function(io, db) {
    };
 
    Connection.prototype.remake = function() {
-      io.sockets.emit('remake');
       WorldController.remake().then(() => io.emit('remake'));
    };
 

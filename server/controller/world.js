@@ -4,14 +4,19 @@ var Promise = require('promise');
 var sqldb = require('../sqldb');
 var World = sqldb.World;
 
+var FastSimplexNoise = require('fast-simplex-noise').default;
+
 var worldInMemory = null;
 var WorldController = module.exports = function() {};
 
 WorldController.generate = function(width, height) {
    var tiles = [];
+   var simplex = new FastSimplexNoise({ frequency: 0.02, max: 2, min: 0, octaves: 8 });
 
-   for (var i = 0; i < 10000; i ++) {
-      tiles.push(Math.round(Math.random()));
+   for (var x = 0; x < width; x ++) {
+      for (var y = 0; y < height; y ++) {
+         tiles.push(Math.floor(simplex.scaled2D(x, y)));
+      }
    }
 
    return tiles;
