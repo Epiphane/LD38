@@ -1,8 +1,10 @@
 define([
+   'constants/materials',
    'helpers/terrain',
    'entities/ui',
    'entities/character'
 ], function(
+   MATERIALS,
    TerrainHelper,
    UI,
    Character
@@ -52,9 +54,7 @@ define([
       },
 
       getMinimapColor: function(tile) {
-         var colors = [[47, 129, 54, 255], [21, 108, 153, 255], [0, 0, 0, 255]];
-
-         return colors[Math.min(tile, colors.length - 1)];
+         return MATERIALS[tile].pixel;
       },
 
       setMinimapPixel: function(index, tile) {
@@ -84,6 +84,7 @@ define([
          var self = this;
          $.get('/api/world').then(function(world) {
             self.world = world;
+            window.world = world
             self.updated = true;
 
             self.minimap.width = world.width;
