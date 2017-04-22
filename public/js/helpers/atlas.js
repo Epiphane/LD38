@@ -14,6 +14,7 @@ define([
       GRASS_UI: { offset: [3, 0] },
       WATER_UI: { offset: [3, 1] },
       SAND_UI: { offset: [0, 2] },
+      DIRT_UI: { offset: [0, 4] },
       GRASS: {
          multiple: true,
          offset: [[22, 3], [21, 5], [22, 5], [23, 5]],

@@ -11,6 +11,7 @@ define([
       { name: 'Grass', tile: TerrainAtlas.offsets.GRASS_UI },
       { name: 'Water', tile: TerrainAtlas.offsets.WATER_UI },
       { name: 'Sand', tile: TerrainAtlas.offsets.SAND_UI },
+      { name: 'Dirt', tile: TerrainAtlas.offsets.DIRT_UI },
    ];
 
    return Juicy.Component.create('UI', {
