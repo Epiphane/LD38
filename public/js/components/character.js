@@ -8,9 +8,13 @@ define([
       y: 0,
 
       // Walk cycle frame stuff
-      walkAnimSpeed: 3,
+      walkAnimSpeed: 4,
       walkStartFrame: 0,
-      walkOffset: 0,
+      walkEndFrame: 3,
+
+      attackAnimSpeed: 4,
+      attackStartFrame: 6,
+      attackEndFrame: 9,
 
       isMoving: function() {
          return false;
@@ -25,11 +29,11 @@ define([
        * you can add specialized code here.
        */
       getDirectionFrame: function() {
-         return 0;
+         return 9 * this.direction;
       },
 
       update: function() {
-         var originalFrame = this.frame;
+         var originalFrame = this.entity.getComponent('Image').frame;
 
          if (this.isMoving()) {
             // Animate through the character's walk cycle every three frames
@@ -39,7 +43,7 @@ define([
                didChange = true;
             }
 
-            this.frame = this.walkStartFrame + this.walkOffset;
+            this.entity.getComponent('Image').frame = this.walkStartFrame + this.walkOffset;
          }
          else if (this.isAttacking()) {
             if (this.state.game.ticks % this.attackAnimSpeed === 0) {
@@ -49,15 +53,15 @@ define([
 
             var attackCycleLength = this.attackEndFrame - this.attackStartFrame;
             var attackFrame = this.attackOffset % attackCycleLength;
-            this.frame = this.attackStartFrame + attackFrame;
+            this.entity.getComponent('Image').frame = this.attackStartFrame + attackFrame;
          }
          else {
-            this.frame = this.walkStartFrame;
+            this.entity.getComponent('Image').frame = this.walkStartFrame;
          }
 
-         this.frame += this.getDirectionFrame();
+         this.entity.getComponent('Image').frame += this.getDirectionFrame();
 
-         return originalFrame != this.frame; // Returns TRUE if needs redraw
+         return originalFrame != this.entity.getComponent('Image').frame; // Returns TRUE if needs redraw
       },
    });
 });

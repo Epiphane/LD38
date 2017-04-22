@@ -44,6 +44,7 @@ define([
 
          this.ui = new UI(this);
          this.mainChar = new Character(this);
+         this.mainChar.setImage('./images/player.png');
 
          this.minimapFrame = new Juicy.Entity(this, ['Image']);
          this.minimapFrame.setImage('./images/frame.png');

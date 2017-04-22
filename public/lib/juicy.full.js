@@ -591,8 +591,8 @@
          args[0] = this.image;
          var drawnWidth  = this.TILE_WIDTH  || this.image.width;
          var drawnHeight = this.TILE_HEIGHT || this.image.height;
-         var sheetX = (this.frame % this.tileCols) * this.TILE_WIDTH;
-         var sheetY = (this.frame / this.tileCols) * this.TILE_HEIGHT;
+         var sheetX = (this.frame % this.tileCols) * this.TILE_WIDTH || 0;
+         var sheetY = (this.frame / this.tileCols) * this.TILE_HEIGHT || 0;
 
          context.drawImage(this.image, sheetX, sheetY,
              drawnWidth, drawnHeight, 0, 0, drawnWidth, drawnHeight);

@@ -6,10 +6,10 @@ define([
    SpriteComponent
 ) {
    return Juicy.Entity.extend({
-      components: [CharComponent, SpriteComponent],
+      components: [CharComponent, 'Image'],
 
       init: function() {
-         this.action = 0;  
+         this.action = 0;
       },
    })
 })
