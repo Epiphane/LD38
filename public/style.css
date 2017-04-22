@@ -22,7 +22,7 @@ body {
   position: fixed;
   height: 100%;
   width: 100%;
-  z-index: 100;
+  z-index: 101;
   display: none;
 }
 
@@ -60,7 +60,7 @@ body {
   position: absolute;
   top: 50%;
   left: 50%;
-  margin-top: -150px;
+  margin-top: -220px;
   margin-left: -150px;
   width: 300px;
 
