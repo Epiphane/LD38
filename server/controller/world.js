@@ -15,7 +15,15 @@ WorldController.generate = function(width, height) {
    }
 
    return tiles;
-}
+};
+
+WorldController.remake = function() {
+   return WorldController.getWorld().then((world) => {
+      return world.update({
+         tiles: WorldController.generate(world.width, world.height)
+      });
+   });
+};
 
 WorldController.create = function() {
    return World.create({
@@ -43,11 +51,11 @@ WorldController.activate = function(index) {
       var value = (world.tiles[index] + 1) % 8;
       world.tiles[index] = value;
 
-      return sqldb.sequelize.query('UPDATE worlds SET tiles[?] = ? WHERE _id = ?', {
+      sqldb.sequelize.query('UPDATE worlds SET tiles[?] = ? WHERE _id = ?', {
          replacements: [index, value, world._id]
       }).then(() => {
-         return value;
       })
+      return value;
    })
 };
 

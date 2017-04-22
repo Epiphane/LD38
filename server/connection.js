@@ -11,6 +11,7 @@ module.exports = function(io, db) {
 
       socket.on('message', this.recv.bind(this));
       socket.on('activate', this.activate.bind(this));
+      socket.on('remake', this.remake.bind(this));
    };
 
    Connection.prototype.logout = function() {
@@ -29,6 +30,11 @@ module.exports = function(io, db) {
       WorldController.activate(index).then((value) => {
          socket.broadcast.emit('update', [index, value]);
       })
+   };
+
+   Connection.prototype.remake = function() {
+      io.sockets.emit('remake');
+      WorldController.remake().then(() => io.emit('remake'));
    };
 
    Connection.prototype.handle = function(message) {

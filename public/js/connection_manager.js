@@ -3,16 +3,11 @@ define([
 ) {
    var noop = function() {};
 
-   var events = [
-      'connect', 'disconnect', 'reconnect', 'update'
-   ];
-
    var ConnectionManager = function() {
       this.socket = new io();
 
+      this.eventsRegistered = [];
       this.callbacks = {};
-
-      this.setupSocketHooks();
    };
 
    ConnectionManager.prototype.emit = function(type, data) {
@@ -25,6 +20,15 @@ define([
 
    ConnectionManager.prototype.on = function(event, callback) {
       this.callbacks[event] = callback;
+
+      if (this.eventsRegistered.indexOf(event) < 0) {
+         var self = this;
+         self.socket.on(event, function(data) {
+            self.callbacks[event](data);
+         })
+
+         this.eventsRegistered.push(event);
+      }
    };
 
    ConnectionManager.prototype.off = function(event, callback) {
@@ -40,18 +44,6 @@ define([
          callback.apply(self, arguments);
       }
    };
-
-   ConnectionManager.prototype.setupSocketHooks = function() {
-      var self = this;
-
-      events.forEach(function(event) {
-         self.callbacks[event] = noop;
-
-         self.socket.on(event, function(data) {
-            self.callbacks[event](data);
-         });
-      });
-   }
 
    return ConnectionManager;
 });
