@@ -15,28 +15,12 @@ define([
       this.setupSocketHooks();
    };
 
-   ConnectionManager.prototype.requestName = function(name) {
-      this.socket.emit('name_request', name);
-   };
-
-   ConnectionManager.prototype.requestCharacter = function() {
-      this.socket.emit('character');
-   };
-
-   ConnectionManager.prototype.requestAbilities = function() {
-      this.socket.emit('abilities');
-   };
-
-   ConnectionManager.prototype.navigateTo = function(message) {
-      this.socket.emit('message', message);
-   };
-
-   ConnectionManager.prototype.doAction = function(message) {
-      this.socket.emit('message', message);
+   ConnectionManager.prototype.emit = function(type, data) {
+      this.socket.emit(type, data);
    };
 
    ConnectionManager.prototype.send = function(message) {
-      this.socket.emit('message', message);
+      this.emit('message', message);
    };
 
    ConnectionManager.prototype.on = function(event, callback) {

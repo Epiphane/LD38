@@ -1,6 +1,7 @@
-var _       = require('lodash');
+var _               = require('lodash');
+var WorldController = require('./controller/world');
 
-module.exports = function(io) {
+module.exports = function(io, db) {
    var connections = {};
 
    var Connection = function(socket) {
@@ -9,6 +10,7 @@ module.exports = function(io) {
       this.game = null;
 
       socket.on('message', this.recv.bind(this));
+      socket.on('activate', this.activate.bind(this));
    };
 
    Connection.prototype.logout = function() {
@@ -16,13 +18,19 @@ module.exports = function(io) {
    };
 
    Connection.prototype.disconnect = function() {
-      if (this.name) {
-         this.game.releasePlayer(this);
-      }
    };
 
    Connection.prototype.recv = function(message) {
       this.game.message(this, message);
+   };
+
+   Connection.prototype.activate = function(index) {
+      console.log('activate', index);
+
+      var socket = this.socket;
+      WorldController.activate(index).then((value) => {
+         socket.broadcast.emit('update', [index, value]);
+      })
    };
 
    Connection.prototype.handle = function(message) {

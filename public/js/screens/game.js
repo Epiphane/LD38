@@ -14,6 +14,14 @@ define([], function() {
                self.updated = true;
             });
          });
+
+         connection.on('update', function(info) {
+            var index = info[0];
+            var value = info[1];
+
+            self.world.tiles[index] = value;
+            self.updated = true;
+         });
       },
 
       init: function() {
@@ -35,10 +43,12 @@ define([], function() {
             return;
          }
 
-         this.world.tiles[point.x + point.y * this.world.width] =
-            (this.world.tiles[point.x + point.y * this.world.width] + 1) % 8;
+         var index = point.x + point.y * this.world.width;
+         this.world.tiles[index] = (this.world.tiles[index] + 1) % 8;
          this.updated = true;
          this.lastDrag = point;
+
+         this.connection.emit('activate', index);
       },
 
       dragstart: function(point) {

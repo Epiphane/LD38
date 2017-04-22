@@ -7,9 +7,7 @@ module.exports = function(db, auth) {
    var app       = new express();
    
    app.get('/', function(req, res) {
-      var world = WorldController.generate();
-
-      res.json(world);
+      WorldController.getWorld().then((world) => res.json(world));
    });
 
    return app;

@@ -4,8 +4,9 @@ var http    = require('http').Server(app);
 var io      = require('socket.io')(http);
 var fs      = require('fs');
 
+var sqldb   = require('./sqldb');
 var api     = require('./api');
-var Connection = require('./connection')(io);
+var Connection = require('./connection')(io, sqldb);
 var less = require('less-middleware');
 
 // API
