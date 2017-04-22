@@ -8,7 +8,10 @@ define([], function() {
 
       },
 
-      update: function(dt) {
+      update: function(dt, game) {
+         if (game.keyDown('SPACE'))
+            return false; // RERENDER
+
          return true; // Don't rerender
       },
 

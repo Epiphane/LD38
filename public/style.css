@@ -48,6 +48,29 @@ body {
   margin-top: -40px;
 }
 
+#overlay {
+  background: rgba(0, 0, 0, 0.7);
+  position: fixed;
+  height: 100%;
+  width: 100%;
+  z-index: 100;
+}
+
+#overlay > div {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  margin-top: -150px;
+  margin-left: -150px;
+  width: 300px;
+
+  color: white;
+}
+
+#overlay h2 {
+  font-weight: normal;
+}
+
 img {
   image-rendering: pixelated;
 }
