@@ -57,6 +57,6 @@ require([
    connection.on('players', function(players) {
       // console.log(players);
    });
-      
+
    Juicy.Game.setState(new GameScreen(connection)).run();
 })

@@ -1,11 +1,13 @@
 define([
    'constants/materials',
    'helpers/terrain',
-   'entities/ui'
+   'entities/ui',
+   'entities/character'
 ], function(
    MATERIALS,
    TerrainHelper,
-   UI
+   UI,
+   Character
 ) {
    return Juicy.State.extend({
       constructor: function(connection) {
@@ -40,6 +42,7 @@ define([
          this.minimapPixels = null;
 
          this.ui = new UI(this);
+         this.mainChar = new Character(this);
 
          this.minimapFrame = new Juicy.Entity(this, ['Image']);
          this.minimapFrame.setImage('./images/frame.png');
@@ -143,11 +146,15 @@ define([
          var dir = Math.sign(e.wheelDelta);
          var horizontal = e.getModifierState('Shift');
 
+         var SCROLL_SLOW = 0.02;
+
          if (horizontal) {
-            this.camera.x -= dir * 5;
+            this.camera.x -= e.wheelDeltaY * SCROLL_SLOW;
+            this.camera.y -= e.wheelDeltaX * SCROLL_SLOW;
          }
          else {
-            this.camera.y -= dir * 5
+            this.camera.x -= e.wheelDeltaX * SCROLL_SLOW;
+            this.camera.y -= e.wheelDeltaY * SCROLL_SLOW;
          }
          this.updated = true;
       },
@@ -162,9 +169,9 @@ define([
       drag: function(point) {
          if (point.x > this.ui.position.x)
             return;
-         
+
          this.activate(point);
-      }, 
+      },
 
       dragend: function(point) {
          this.lastDrag = null;
@@ -175,9 +182,9 @@ define([
             this.ui.click(point);
             this.updated = true;
 
-            return;            
+            return;
          }
-         
+
          this.activate(point);
          this.lastDrag = null;
       },
@@ -204,15 +211,15 @@ define([
 
          for (var i = min_x; (i - min_x) * TerrainHelper.tilesize <= width + 3 /* ???? */; i ++) {
             for (var j = min_y; (j - min_y) * TerrainHelper.tilesize <= height + 6 /* ???? */; j ++) {
-               TerrainHelper.draw(context, 
-                                  i - this.camera.x, 
-                                  j - this.camera.y, 
-                                  this.world, 
-                                  i, 
+               TerrainHelper.draw(context,
+                                  i - this.camera.x,
+                                  j - this.camera.y,
+                                  this.world,
+                                  i,
                                   j);
             }
          }
-         
+
          this.minimapFrame.position.x = width - this.minimapFrame.width;
          this.minimapFrame.render(context);
 
@@ -221,8 +228,8 @@ define([
             var minimap_x = width - this.minimap.width * scale - 4;
             var minimap_y = 4;
 
-            context.drawImage(this.minimap, 
-                              minimap_x, 
+            context.drawImage(this.minimap,
+                              minimap_x,
                               minimap_y,
                               this.minimap.width * scale,
                               this.minimap.height * scale);
@@ -237,6 +244,7 @@ define([
          this.ui.position.y = this.minimapFrame.height;
          this.ui.height = height - this.minimapFrame.height;
          this.ui.render(context);
+         this.mainChar.render(context);
       }
    })
 })
