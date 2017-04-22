@@ -38,18 +38,53 @@ define([
          onReadyCallbacks.push(callback);
    };
 
+   TerrainHelper.terrainAt = function(world, x, y) {
+      if (x < 0) x = 0;
+      if (y < 0) y = 0;
+      if (x >= world.width) x = world.width - 1;
+      if (y >= world.height) y = world.height - 1;
+
+      return world.tiles[x + y * world.width];
+   };
+
    TerrainHelper.draw = function(context, dx, dy, world, x, y) {
-      var index = x + y * world.width;
-      var tiles = world.tiles;
-      var tile = tiles[index];
-      var offset = [0, 0]
+      var tile = TerrainHelper.terrainAt(world, x, y);
+      var offset = [0, 0];
 
       switch (tile) {
       case TILE.GRASS:
-         offset = ATLAS.GRASS;
+         var randomish = (x * y + y * 3) % ATLAS.GRASS.length;
+         offset = ATLAS.GRASS[randomish];
+
+         if (TerrainHelper.terrainAt(world, x + 1, y) === TILE.WATER) {
+            offset = ATLAS.GRASS_WATER_R;
+         }
+         else if (TerrainHelper.terrainAt(world, x - 1, y) === TILE.WATER) {
+            offset = ATLAS.GRASS_WATER_L;
+         }
+         else if (TerrainHelper.terrainAt(world, x, y - 1) === TILE.WATER) {
+            offset = ATLAS.GRASS_WATER_T;
+         }
+         else if (TerrainHelper.terrainAt(world, x, y + 1) === TILE.WATER) {
+            offset = ATLAS.GRASS_WATER_B;
+         }
+         else if (TerrainHelper.terrainAt(world, x - 1, y - 1) === TILE.WATER) {
+            offset = ATLAS.GRASS_WATER_TL;
+         }
+         else if (TerrainHelper.terrainAt(world, x + 1, y - 1) === TILE.WATER) {
+            offset = ATLAS.GRASS_WATER_TR;
+         }
+         else if (TerrainHelper.terrainAt(world, x - 1, y + 1) === TILE.WATER) {
+            offset = ATLAS.GRASS_WATER_BL;
+         }
+         else if (TerrainHelper.terrainAt(world, x + 1, y + 1) === TILE.WATER) {
+            offset = ATLAS.GRASS_WATER_BR;
+         }
          break;
       case TILE.WATER:
-         offset = ATLAS.WATER;
+         var score = 0;
+         if (x === y * 3) score ++;
+         offset = ATLAS.WATER[score];
          break;
       }
 
