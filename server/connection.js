@@ -28,7 +28,7 @@ module.exports = function(io, db) {
    Connection.prototype.activate = function(index) {
       var socket = this.socket;
       WorldController.activate(index).then((value) => {
-         socket.broadcast.emit('update', [index, value]);
+         io.emit('update', [index, value]);
       })
    };
 

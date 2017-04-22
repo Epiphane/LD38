@@ -104,7 +104,7 @@ define([
          }
 
          var index = point.x + point.y * this.world.width;
-         this.world.tiles[index] = (this.world.tiles[index] + 1) % 8;
+         this.world.tiles[index] = (this.world.tiles[index] + 1) % 2;
          this.updated = true;
          this.lastDrag = point;
 

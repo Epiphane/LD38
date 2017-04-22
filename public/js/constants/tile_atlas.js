@@ -22,6 +22,10 @@ define([], function() {
       GRASS_WATER_L: [8, 12],
       GRASS_WATER_TR: [6, 13],
       GRASS_WATER_T: [7, 13],
-      GRASS_WATER_TL: [8, 13]
+      GRASS_WATER_TL: [8, 13],
+      WATER_GRASS_BR: [7, 9],
+      WATER_GRASS_BL: [8, 9],
+      WATER_GRASS_TR: [7, 10],
+      WATER_GRASS_BL: [8, 10],
    };
 });

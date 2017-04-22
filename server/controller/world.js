@@ -11,11 +11,17 @@ var WorldController = module.exports = function() {};
 
 WorldController.generate = function(width, height) {
    var tiles = [];
-   var simplex = new FastSimplexNoise({ frequency: 0.02, max: 2, min: 0, octaves: 8 });
+   var simplex = new FastSimplexNoise({ frequency: 0.02, max: 1, min: -1, octaves: 8 });
 
    for (var x = 0; x < width; x ++) {
       for (var y = 0; y < height; y ++) {
-         tiles.push(Math.floor(simplex.scaled2D(x, y)));
+         var tile = 0;
+         var elevation = simplex.scaled2D(x, y);
+
+         if (elevation < 0)
+            tile = 1;
+
+         tiles.push(tile);
       }
    }
 
@@ -53,7 +59,7 @@ WorldController.getWorld = function() {
 
 WorldController.activate = function(index) {
    return WorldController.getWorld().then((world) => {      
-      var value = (world.tiles[index] + 1) % 8;
+      var value = (world.tiles[index] + 1) % 2;
       world.tiles[index] = value;
 
       sqldb.sequelize.query('UPDATE worlds SET tiles[?] = ? WHERE _id = ?', {
