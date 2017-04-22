@@ -96,8 +96,8 @@ define([
          if (!this.world)
             return;
 
-         point.x = Math.floor(point.x / TerrainHelper.tilesize + this.camera.x);
-         point.y = Math.floor(point.y / TerrainHelper.tilesize + this.camera.y);
+         point.x = Math.floor(point.x / TerrainHelper.tilesize + this.camera.x + 0.5);
+         point.y = Math.floor(point.y / TerrainHelper.tilesize + this.camera.y + 0.5);
 
          if (this.lastDrag && point.isEqual(this.lastDrag)) {
             return;
@@ -109,6 +109,19 @@ define([
          this.lastDrag = point;
 
          this.connection.emit('activate', index);
+      },
+
+      mousewheel: function(e) {
+         var dir = Math.sign(e.wheelDelta);
+         var horizontal = e.getModifierState('Shift');
+
+         if (horizontal) {
+            this.camera.x -= dir * 5;
+         }
+         else {
+            this.camera.y -= dir * 5
+         }
+         this.updated = true;
       },
 
       dragstart: function(point) {

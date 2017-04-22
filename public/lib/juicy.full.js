@@ -194,17 +194,17 @@
       var startDrag = false;
       canvas.onmousedown = function(evt) {
          startDrag = evt;
-         Game.trigger('dragstart', evt);
+         Game.triggerAtPos('dragstart', evt);
       };
       canvas.onmouseup = function(evt) {
          var startPos = Game.getCanvasCoords(startDrag);
          var endPos   = Game.getCanvasCoords(evt);
 
          if (startPos.sub(endPos).length() <= 2) {
-            Game.trigger('click', evt);
+            Game.triggerAtPos('click', evt);
          }
          else {
-            Game.trigger('dragend', evt);
+            Game.triggerAtPos('dragend', evt);
          }
 
          startDrag = false;
@@ -213,7 +213,7 @@
          Game_mouse = Game.getCanvasCoords(evt);
 
          if (startDrag) {
-            Game.trigger('drag', evt);
+            Game.triggerAtPos('drag', evt);
          }
       }
 
@@ -247,9 +247,13 @@
       return this; // Enable chaining
    };
 
-   Game.trigger = function(evt, pos) {
+   Game.trigger = function(evt, data) {
       if (Game_state && Game_state[evt])
-         Game_state[evt](Game.getCanvasCoords(pos));
+         Game_state[evt](data);
+   };
+
+   Game.triggerAtPos = function(evt, pos) {
+      Game.trigger(evt, Game.getCanvasCoords(pos));
    };
 
    Game.update = function() {

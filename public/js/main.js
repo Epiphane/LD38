@@ -29,6 +29,10 @@ require([
       D: 68,
    });
 
+   window.onmousewheel = function(e) {
+      Juicy.Game.trigger('mousewheel', e);
+   }
+
    // On window resize, fill it with the game again!
    window.onresize = function() {
       Juicy.Game.resize();
