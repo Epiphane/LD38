@@ -9,8 +9,6 @@ define([
 ) {
    return Juicy.Component.create('UI', {
       render: function(context) {
-         context.fillStyle = 'white';
-
          context.fillStyle = this.entity.action === 0 ? 'red' : 'white';
          context.font = '36px Pixellari, monospace';
          context.fillText('Grass', 80, 50);
