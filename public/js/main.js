@@ -33,8 +33,6 @@ require([
    window.onresize = function() {
       Juicy.Game.resize();
    };
-      
-   Juicy.Game.setState(new GameScreen()).run();
 
    // Initialize connection to server
    var connection = new ConnectionManager();
@@ -48,11 +46,6 @@ require([
       disconnect.hide();
    });
 
-   connection.on('connect', function() {
-      // Ask the server for the entire game state, and also begin polling for changes
-
-   });
-
    connection.on('update', function(updates) {
       content.onUpdate(updates);
    });
@@ -60,4 +53,6 @@ require([
    connection.on('players', function(players) {
       // console.log(players);
    });
+      
+   Juicy.Game.setState(new GameScreen(connection)).run();
 })

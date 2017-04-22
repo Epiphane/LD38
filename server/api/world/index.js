@@ -1,15 +1,15 @@
 var Promise    = require('promise');
 var express    = require('express');
 
+var WorldController = require('../../controller/world');
+
 module.exports = function(db, auth) {
    var app       = new express();
    
-   var Realm     = db.Realm;
-
    app.get('/', function(req, res) {
-      Realm.findAll({ where: {} }).then(function(realms) {
-         res.json(realms);
-      });
+      var world = WorldController.generate();
+
+      res.json(world);
    });
 
    return app;

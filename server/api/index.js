@@ -20,5 +20,5 @@ app.use('/', function(req, res, next) {
 });
 
 app.use('/auth', require('./auth')(sqldb, auth));
-app.use('/realm', auth.hasRole('admin'), require('./realm')(sqldb, auth));
+app.use('/world', require('./world')(sqldb, auth));
 app.use('/user', auth.hasRole('admin'), require('./user')(sqldb, auth));

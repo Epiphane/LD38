@@ -25,7 +25,7 @@ function importModel(name) {
 }
 
 // Insert models below
-var Realm        = db.Realm        = importModel('realm');
+var World        = db.World        = importModel('world');
 var User         = db.User         = importModel('user');
 
 // Put in special hooks

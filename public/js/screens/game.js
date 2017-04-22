@@ -1,7 +1,19 @@
 define([], function() {
    return Juicy.State.extend({
-      constructor: function() {
+      constructor: function(connection) {
+         this.connection = connection;
 
+         this.world = null;
+         this.lastDrag = null;
+
+         var self = this;
+         connection.on('connect', function() {
+            // Ask the server for the entire game state, and also begin polling for changes
+            $.get('/api/world').then(function(response) {
+               self.world = response;
+               self.updated = true;
+            });
+         });
       },
 
       init: function() {
@@ -15,14 +27,49 @@ define([], function() {
          return true; // Don't rerender
       },
 
+      activate: function(point) {
+         point.x = Math.floor(point.x / 40);
+         point.y = Math.floor(point.y / 40);
+
+         if (this.lastDrag && point.isEqual(this.lastDrag)) {
+            return;
+         }
+
+         this.world.tiles[point.x + point.y * this.world.width] =
+            (this.world.tiles[point.x + point.y * this.world.width] + 1) % 8;
+         this.updated = true;
+         this.lastDrag = point;
+      },
+
+      dragstart: function(point) {
+         this.activate(point);
+      },
+
+      drag: function(point) {
+         this.activate(point);
+      },
+
+      dragend: function(point) {
+         this.lastDrag = null;
+      },
+
+      click: function(point) {
+         this.activate(point);
+         this.lastDrag = null;
+      },
+
       render: function(context, width, height) {
-         var colors = ['black', 'green', 'red', 'yellow', 'white', 'pink', 'purple', 'blue'];
+         if (!this.world) {
+            return;
+         }
+
+         var colors = ['teal', 'green', 'red', 'yellow', 'white', 'pink', 'purple', 'blue'];
 
          var tilesize = 40;
-         for (var i = 0; i < width; i += tilesize) {
-            for (var j = 0; j < height; j += tilesize) {
-               context.fillStyle = colors[Math.floor(Math.random() * colors.length)];
-               context.fillRect(i, j, tilesize, tilesize);
+         for (var i = 0; i < this.world.width; i ++) {
+            for (var j = 0; j < this.world.height; j ++) {
+               context.fillStyle = colors[this.world.tiles[i + j * this.world.width]];
+               context.fillRect(i * tilesize, j * tilesize, tilesize, tilesize);
             }
          }
       }

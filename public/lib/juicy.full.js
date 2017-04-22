@@ -24,6 +24,10 @@
       this.y = y || x;
    };
 
+   Point.prototype.isEqual = function(other) {
+      return this.x === other.x && this.y === other.y;
+   };
+
    Point.prototype.add = function(other) {
       return new Point(this.x + other.x, this.y + other.y);
    };
@@ -180,7 +184,7 @@
       var mx = evt.clientX - canvasRect.left;
       var my = evt.clientY - canvasRect.top;
 
-      return new Point(Math.floor(mx * Game.width /  Game_canvas.width), Math.floor(my * Game.height / Game_canvas.height));
+      return new Point(mx, my);
    };
 
    Game.setCanvas = function(canvas) {
