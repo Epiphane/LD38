@@ -25,9 +25,9 @@ module.exports = function(io, db) {
       this.game.message(this, message);
    };
 
-   Connection.prototype.activate = function(index) {
+   Connection.prototype.activate = function(index, action) {
       var socket = this.socket;
-      WorldController.activate(index).then((value) => {
+      WorldController.activate(index, action).then((value) => {
          io.emit('update', [index, value]);
       })
    };

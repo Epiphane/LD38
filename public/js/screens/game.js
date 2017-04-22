@@ -1,11 +1,10 @@
 define([
-   'helpers/terrain'
+   'helpers/terrain',
+   'entities/ui'
 ], function(
-   TerrainHelper
+   TerrainHelper,
+   UI
 ) {
-   var MinimapFrame = new Image();
-       MinimapFrame.src = './images/frame.png'
-
    return Juicy.State.extend({
       constructor: function(connection) {
          this.connection = connection;
@@ -37,6 +36,11 @@ define([
 
          this.minimap = document.createElement('canvas');
          this.minimapPixels = null;
+
+         this.ui = new UI(this);
+
+         this.minimapFrame = new Juicy.Entity(this, ['Image']);
+         this.minimapFrame.setImage('./images/frame.png');
       },
 
       init: function() {
@@ -126,10 +130,12 @@ define([
          }
 
          var index = point.x + point.y * this.world.width;
-         this.updateTile(index, (this.world.tiles[index] + 1) % 2);
+         // this.updateTile(index, (this.world.tiles[index] + 1) % 2);
          this.lastDrag = point;
 
-         this.connection.emit('activate', index);
+         if (this.ui.action !== 'none') {
+            this.connection.emit('activate', index, this.ui.action);
+         }
       },
 
       mousewheel: function(e) {
@@ -146,10 +152,16 @@ define([
       },
 
       dragstart: function(point) {
+         if (point.x > this.ui.position.x)
+            return;
+
          this.activate(point);
       },
 
       drag: function(point) {
+         if (point.x > this.ui.position.x)
+            return;
+         
          this.activate(point);
       }, 
 
@@ -158,6 +170,13 @@ define([
       },
 
       click: function(point) {
+         if (point.x > this.ui.position.x) {
+            this.ui.click(point);
+            this.updated = true;
+
+            return;            
+         }
+         
          this.activate(point);
          this.lastDrag = null;
       },
@@ -183,7 +202,7 @@ define([
          var min_y = Math.floor(this.camera.y);
 
          for (var i = min_x; (i - min_x) * TerrainHelper.tilesize <= width + 3 /* ???? */; i ++) {
-            for (var j = min_y; (j - min_y) * TerrainHelper.tilesize < height; j ++) {
+            for (var j = min_y; (j - min_y) * TerrainHelper.tilesize <= height + 6 /* ???? */; j ++) {
                TerrainHelper.draw(context, 
                                   i - this.camera.x, 
                                   j - this.camera.y, 
@@ -192,13 +211,15 @@ define([
                                   j);
             }
          }
+         
+         this.minimapFrame.position.x = width - this.minimapFrame.width;
+         this.minimapFrame.render(context);
 
          if (this.minimap) {
             var scale = 2;
             var minimap_x = width - this.minimap.width * scale - 4;
             var minimap_y = 4;
 
-            context.drawImage(MinimapFrame, minimap_x - 4, minimap_y - 4);
             context.drawImage(this.minimap, 
                               minimap_x, 
                               minimap_y,
@@ -210,6 +231,11 @@ define([
             context.fillStyle = 'rgba(0, 0, 0, 0.3)';
             context.fillRect(minimap_x + scale * this.camera.x, minimap_y + scale * this.camera.y, viewport_w, viewport_h);
          }
+
+         this.ui.position.x = width - this.minimapFrame.width;
+         this.ui.position.y = this.minimapFrame.height;
+         this.ui.height = height - this.minimapFrame.height;
+         this.ui.render(context);
       }
    })
 })

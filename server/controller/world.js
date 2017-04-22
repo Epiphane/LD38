@@ -57,9 +57,13 @@ WorldController.getWorld = function() {
    });
 };
 
-WorldController.activate = function(index) {
+WorldController.activate = function(index, action) {
    return WorldController.getWorld().then((world) => {      
       var value = (world.tiles[index] + 1) % 2;
+      value = action;
+      if (world.tiles[index] === value)
+         return value;
+
       world.tiles[index] = value;
 
       sqldb.sequelize.query('UPDATE worlds SET tiles[?] = ? WHERE _id = ?', {

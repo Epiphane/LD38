@@ -200,7 +200,7 @@
          var startPos = Game.getCanvasCoords(startDrag);
          var endPos   = Game.getCanvasCoords(evt);
 
-         if (startPos.sub(endPos).length() <= 2) {
+         if (startPos.sub(endPos).length() <= 5) {
             Game.triggerAtPos('click', evt);
          }
          else {

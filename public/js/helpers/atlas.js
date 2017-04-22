@@ -7,7 +7,11 @@ define([
 
    var G = TILE.GRASS;
    var W = TILE.WATER;
+   AtlasHelper.offsets = {};
    var configs = {
+      GRASS_1: {
+         offset: [21, 5]
+      },
       GRASS: {
          offset: [22, 3],
          tiles: [G, G, G, G]
@@ -16,6 +20,9 @@ define([
          // [22, 3], 
          // [22, 5], 
          // [23, 5]
+      },
+      WATER_BUSY_1: {
+         offset: [21, 17]
       },
       WATER: {
          offset: [8, 14],
@@ -122,6 +129,11 @@ define([
 
       var config = configs[key];
       var tiles = config.tiles;
+      AtlasHelper.offsets[key] = config.offset;
+      if (!tiles) {
+         continue;
+      }
+
       AtlasHelper.registerTile(config.offset, tiles[0], tiles[1], tiles[2], tiles[3]);
    }
 

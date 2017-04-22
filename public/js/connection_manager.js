@@ -11,7 +11,7 @@ define([
    };
 
    ConnectionManager.prototype.emit = function(type, data) {
-      this.socket.emit(type, data);
+      this.socket.emit.apply(this.socket, arguments);
    };
 
    ConnectionManager.prototype.send = function(message) {
