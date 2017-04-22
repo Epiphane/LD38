@@ -8,7 +8,7 @@
    /* -------------------- Animation frames ----------------- */
    var requestAnimationFrame = (function() {
       return window.requestAnimationFrame ||
-         window.webkitRequestAnimationFrame ||  
+         window.webkitRequestAnimationFrame ||
          window.mozRequestAnimationFrame    ||
          function(callback) {
             window.setTimeout(callback, 1000 / 60);
@@ -35,7 +35,7 @@
    Point.prototype.mult = function(other) {
       return new Point(this.x * (other.x || other), this.y * (other.y || other));
    };
-   
+
    Point.prototype.sub = function(other) {
       return this.add(other.mult(-1));
    };
@@ -82,7 +82,7 @@
    };
 
    /* -------------------- Game Handler --------------------- */
-   /* 
+   /*
     * init(canvas, width, height) - Construct new game
     *  [Helper]
     *    getCoords(event)         - Compute relative location
@@ -232,7 +232,7 @@
       // Make sure we re-render
       if (Game_state)
          Game_state.__hasRendered = false;
-      
+
       return this; // Enable chaining
    };
 
@@ -271,7 +271,7 @@
       try {
          var updated = !Game_state.update(dt, Game) || Game_state.updated;
          Game_state.updated = false;
-         
+
          Game_lastTime = nextTime;
 
          if (updated || !Game_state.__hasRendered) {
@@ -313,7 +313,7 @@
    };
 
    /* -------------------- Game State ----------------------- */
-   /* 
+   /*
     * new State() - Construct new state
     *  [Constructor]
     *    init   ()          - Run every time the state is swapped to.
@@ -329,7 +329,7 @@
    State.prototype.render  = function() {};
 
    /* -------------------- Game Entity ----------------------- */
-   /* 
+   /*
     * new Entity(components) - Construct new entity
     *  [Static Properties]
     *    components       - Array of component constructors
@@ -352,7 +352,7 @@
       this.children   = [];
 
       components = components || this.__proto__.components;
-         
+
       // Transform component
       this.position = new Point();
       this.scale    = new Point(1);
@@ -454,15 +454,15 @@
    };
 
    /* -------------------- Game Component -------------------- */
-   /* 
+   /*
     * new Component(entity) - Construct new component on an entity
     *  [Static Properties]
     *    name             - Name of the component
     *  [Useful]
     *    update (dt)      - Update component (if applicable)
     *    render (context) - Render component (if applicable)
-    * 
-    * Component.create(name, prototype, static[, force]) 
+    *
+    * Component.create(name, prototype, static[, force])
     *    - Extend and register by name. Force to override another component
     */
    var Component = Juicy.Component = function() {/* Ghost to avoid getting noopped */};
@@ -522,11 +522,17 @@
          this._tint = false;
          this.opacity = 1;
 
+         this.TILE_WIDTH = 0;
+         this.TILE_HEIGHT = 0;
+         this.tileCols = 0;
+         this.frame = 0;
+
          this.image = new Image();
          this.image.onload = function() {
             if (!entity.width && !entity.height) {
                entity.width  = this.width;
                entity.height = this.height;
+               this.tileCols = this.width / this.TILE_WIDTH;
             }
 
             if (self._tint) {
@@ -581,8 +587,15 @@
          var args          = arguments;
 
          context.globalAlpha = this.opacity;
+
          args[0] = this.image;
-         context.drawImage.apply(context, args);
+         var drawnWidth  = this.TILE_WIDTH  || this.image.width;
+         var drawnHeight = this.TILE_HEIGHT || this.image.height;
+         var sheetX = (this.frame % this.tileCols) * this.TILE_WIDTH;
+         var sheetY = (this.frame / this.tileCols) * this.TILE_HEIGHT;
+
+         context.drawImage(this.image, sheetX, sheetY,
+             drawnWidth, drawnHeight, 0, 0, drawnWidth, drawnHeight);
 
          if (this._tint) {
             args[0] = this.canvas;
@@ -615,7 +628,7 @@
          info.font = '32px Arial';
          info.text = '';
          info.fillStyle = 'white';
-         
+
          // For accessing outside of this component
          this.opacity = 1;
       },
@@ -675,7 +688,7 @@
    /* ----------------- Entity helper functions -------------- */
    Entity.prototype.contains = function(point) {
       point = point.sub(this.position);
-      return point.x >= 0          && point.y >= 0 && 
+      return point.x >= 0          && point.y >= 0 &&
              point.x <= this.width && point.y <= this.height;
    };
 

@@ -24,6 +24,7 @@ define([
 
          this.cooldown = 0.2;
          this.timer = 0;
+         this.ticks = 0;
 
          if (!TerrainHelper.ready()) {
             TerrainHelper.onReady(function() {
@@ -117,6 +118,9 @@ define([
             this.camera.y += speed * dt;
             this.updated = true;
          }
+
+         this.updated |= this.mainChar.update();
+         this.ticks ++;
 
          return true; // Don't rerender
       },
