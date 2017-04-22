@@ -1,0 +1,6 @@
+node_modules/
+engine/config/environment/local.env.js
+.DS_Store
+domain.*
+aws/corpg/*
+migrations/.history
