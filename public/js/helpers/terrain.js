@@ -22,7 +22,7 @@ define([
    }
 
    var TerrainAtlas = new Image();
-       TerrainAtlas.src = './images/terrain_atlas.png';
+       TerrainAtlas.src = './images/terrain.png';
    waitForImageLoad(TerrainAtlas);
 
    var TerrainHelper = { tilesize: 32 };
@@ -62,31 +62,17 @@ define([
 
    TerrainHelper.draw = function(context, dx, dy, world, x, y) {
       var tiles = [
-         [
-            TerrainHelper.terrainAt(world, x,   y),
-            TerrainHelper.terrainAt(world, x+1, y)
-         ],
-         [
-            TerrainHelper.terrainAt(world, x,   y+1),
-            TerrainHelper.terrainAt(world, x+1, y+1)
-         ]
+         TerrainHelper.terrainAt(world, x,   y),
+         TerrainHelper.terrainAt(world, x+1, y),
+         TerrainHelper.terrainAt(world, x,   y+1),
+         TerrainHelper.terrainAt(world, x+1, y+1)
       ];
-      var offset = Atlas.getOffset(
-            TerrainHelper.terrainAt(world, x,   y),
-            TerrainHelper.terrainAt(world, x+1, y),
-            TerrainHelper.terrainAt(world, x,   y+1),
-            TerrainHelper.terrainAt(world, x+1, y+1));
+      var offsets = Atlas.getOffsets(tiles[0], tiles[1], tiles[2], tiles[3], x ^ y);
 
       var tile_size = TerrainHelper.tilesize;
-      context.drawImage(TerrainAtlas, 
-                        offset[0] * tile_size, 
-                        offset[1] * tile_size, 
-                        tile_size, 
-                        tile_size,
-                        Math.floor(dx * tile_size),
-                        Math.floor(dy * tile_size),
-                        tile_size,
-                        tile_size);
+      offsets.forEach(function(offset) {
+         TerrainHelper.drawOffset(context, Math.floor(dx * tile_size), Math.floor(dy * tile_size), offset);
+      });
    };
 
    return TerrainHelper;

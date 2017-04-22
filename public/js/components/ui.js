@@ -7,24 +7,31 @@ define([
    TerrainHelper,
    TerrainAtlas
 ) {
+   var actions = [
+      { name: 'Grass', tile: TerrainAtlas.offsets.GRASS_UI },
+      { name: 'Water', tile: TerrainAtlas.offsets.WATER_UI },
+      { name: 'Sand', tile: TerrainAtlas.offsets.SAND_UI },
+   ];
+
    return Juicy.Component.create('UI', {
       render: function(context) {
          context.fillStyle = 'white';
 
-         context.fillStyle = this.entity.action === 0 ? 'red' : 'white';
-         context.font = '36px Pixellari, monospace';
-         context.fillText('Grass', 80, 50);
-         TerrainHelper.drawOffset(context, 20, 20, TerrainAtlas.offsets.GRASS_1);
+         var currentAction = this.entity.action;
+         actions.forEach(function(action, index) {
+            context.fillStyle = currentAction === index ? 'red' : 'white';
 
-         context.fillStyle = this.entity.action === 1 ? 'red' : 'white';
-         context.font = '36px Pixellari, monospace';
-         context.fillText('Water', 80, 100);
-         TerrainHelper.drawOffset(context, 20, 70, TerrainAtlas.offsets.WATER_BUSY_1);
+            context.font = '36px Pixellari, monospace';
+            context.fillText(action.name, 80, (index + 1) * 50);
+            TerrainHelper.drawOffset(context, 20, index * 50 + 20, action.tile);
+         });
       },
 
       click: function(point) {
-         if (point.y < 50) this.entity.action = 0;
-         else this.entity.action = 1;
+         if (point.y < 0 || point.y > actions.length * 50)
+            return;
+
+         this.entity.action = Math.floor(point.y / 50);
       }
    });
 });

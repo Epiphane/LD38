@@ -2,6 +2,7 @@
 
 var Promise = require('promise');
 var sqldb = require('../sqldb');
+var TILE  = require('../tiles');
 var World = sqldb.World;
 
 var FastSimplexNoise = require('fast-simplex-noise').default;
@@ -11,15 +12,19 @@ var WorldController = module.exports = function() {};
 
 WorldController.generate = function(width, height) {
    var tiles = [];
-   var simplex = new FastSimplexNoise({ frequency: 0.02, max: 1, min: -1, octaves: 8 });
+   var simplex = new FastSimplexNoise({ frequency: 0.04, max: 1, min: -1, octaves: 8 });
 
    for (var x = 0; x < width; x ++) {
       for (var y = 0; y < height; y ++) {
-         var tile = 0;
+         var tile = TILE.GRASS;
          var elevation = simplex.scaled2D(x, y);
 
+         if (elevation < 0.4)
+            tile = TILE.DIRT;
+         if (elevation < 0.2)
+            tile = TILE.SAND;
          if (elevation < 0)
-            tile = 1;
+            tile = TILE.WATER;
 
          tiles.push(tile);
       }
