@@ -20,6 +20,7 @@ define([
    return Juicy.State.extend({
       constructor: function(connection) {
          this.sandbox = location.search.indexOf('sandbox') >= 0;
+         this.holistic = location.search.indexOf('holistic') >= 0;
          this.connection = connection;
 
          this.minimap = new Minimap(this);
@@ -152,8 +153,14 @@ define([
          if (!this.world)
             return;
 
-         point.x = Math.floor((point.x + this.camera.x) / TerrainHelper.tilesize + 0.5);
-         point.y = Math.floor((point.y + this.camera.y) / TerrainHelper.tilesize + 0.5);
+         if (this.holistic) {
+            point.x = Math.floor(point.x / this.mapScale / TerrainHelper.tilesize + 0.5);
+            point.y = Math.floor(point.y / this.mapScale / TerrainHelper.tilesize + 0.5);
+         }
+         else {
+            point.x = Math.floor((point.x + this.camera.x) / TerrainHelper.tilesize + 0.5);
+            point.y = Math.floor((point.y + this.camera.y) / TerrainHelper.tilesize + 0.5);
+         }
 
          if (point.x < 0 || point.y < 0) return;
 
@@ -245,15 +252,29 @@ define([
             this.camera.y = this.world.height * TerrainHelper.tilesize - height;
 
          // Draw pre-rendered map
-         context.save();
-         context.translate(-this.camera.x, -this.camera.y);
-         this.world.render(context, this.camera.x, this.camera.y, width, height);
-         context.translate(-TerrainHelper.tilesize / 2, -TerrainHelper.tilesize / 2);
-         this.mainChar.render(context);
-         for (var friendID in this.friends) {
-            this.friends[friendID].render(context);
+         if (this.holistic) {
+            context.save();
+            this.mapScale = (width - this.minimapFrame.width) / (this.world.width * TerrainHelper.tilesize);
+            context.scale(this.mapScale, this.mapScale);
+            this.world.render(context, 0, 0, this.world.width * TerrainHelper.tilesize, this.world.height * TerrainHelper.tilesize);
+            context.translate(-TerrainHelper.tilesize / 2, -TerrainHelper.tilesize / 2);
+            this.mainChar.render(context);
+            for (var friendID in this.friends) {
+               this.friends[friendID].render(context);
+            }
+            context.restore();
          }
-         context.restore();
+         else {
+            context.save();
+            context.translate(-this.camera.x, -this.camera.y);
+            this.world.render(context, this.camera.x, this.camera.y, width, height);
+            context.translate(-TerrainHelper.tilesize / 2, -TerrainHelper.tilesize / 2);
+            this.mainChar.render(context);
+            for (var friendID in this.friends) {
+               this.friends[friendID].render(context);
+            }
+            context.restore();
+         }
 
          // Minimap frame
          this.minimapFrame.position.x = width - this.minimapFrame.width;
