@@ -15,7 +15,6 @@ app.get('/', function(req, res) {
 
 app.use('/', function(req, res, next) {
    req.validator = new Validator(req, res);
-
    next();
 });
 
