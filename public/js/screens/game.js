@@ -130,6 +130,13 @@ define([
          this.connection.emit('remake');
       },
 
+      keypress: function(e) {
+         // Numbah?
+         if (e.keyCode >= 48 && e.keyCode <= 57) {
+            this.ui.getComponent('UI').keypress(e.keyCode);
+         }
+      },
+
       update: function(dt, game) {
          if (!this.world)
             return;
@@ -173,8 +180,13 @@ define([
 
          // Sandbox off by default
          if (!window.SANDBOX) {
-            point.x = Math.floor(point.x / TerrainHelper.tilesize + this.camera.x / TerrainHelper.tilesize);// + 0.5);
-            point.y = Math.floor(point.y / TerrainHelper.tilesize + this.camera.y / TerrainHelper.tilesize);// + 0.5);
+            point.x = Math.floor((point.x + this.camera.x) / TerrainHelper.tilesize + 0.5);
+            point.y = Math.floor((point.y + this.camera.y) / TerrainHelper.tilesize + 0.5);
+
+            if (point.x === 0) point.x = 1;
+            if (point.y === 0) point.y = 1;
+            if (point.x === this.world.width) point.x = this.world.width - 1;
+            if (point.y === this.world.height) point.y = this.world.height - 1;
 
             this.mainChar.position = point.mult(TerrainHelper.tilesize);
          }
@@ -262,6 +274,7 @@ define([
          context.save();
          context.translate(-this.camera.x, -this.camera.y);
          context.drawImage(this.canvas, this.camera.x, this.camera.y, width, height, this.camera.x, this.camera.y, width, height);
+         context.translate(-TerrainHelper.tilesize / 2, -TerrainHelper.tilesize / 2);
          this.mainChar.render(context);
          context.restore();
 
