@@ -2,7 +2,8 @@ var Update  = require('./update');
 var log     = require('./log');
 var request = require('request-promise');
 
-var World = module.exports = function() {
+var World = module.exports = function(domain) {
+   this.domain = domain;
    this.width = 0;
    this.height = 0;
    this.tiles = [];
@@ -12,7 +13,7 @@ var World = module.exports = function() {
 World.prototype.fetch = function() {
    var self = this;
    return request({
-      uri: process.env.DOMAIN + '/api/world',
+      uri: this.domain + '/api/world',
       json: true
    }).then((res) => {
       Object.assign(self, res);

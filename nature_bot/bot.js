@@ -4,20 +4,24 @@ var World = require('./world');
 var Components = require('./components');
 var ActionController = require('../server/controller/action');
 
-var NatureBot = function(socket, config) {
+var NatureBot = function(domain, socket, config) {
+   this.domain  = domain;
    this.running = false;
    this.socket  = socket;
-   this.world   = new World();
+   this.world   = new World(domain);
    this.ticks   = 0;
 
    this.components = config.components.map((info) => {
-      var name = info.name || info;
+      if (typeof(info) === 'string') info = { name: info };
 
+      var name = info.name;
       if (!Components[name]) {
          log.error('Component ' + name + ' not found in the components/ directory');
       }
 
-      return new Components[name](info);
+      var component = new Components[name](info);
+      component.name = name;
+      return component;
    });
 };
 
@@ -27,11 +31,27 @@ NatureBot.prototype.start = function() {
       return false;
    }
 
-   log.info('NatureBot started');
    var self = this;
-   this.world.fetch().then(() => {
+   return this.world.fetch().then(() => {
+      return self.init();
+   }).then(() => {
       self.running = true;
+      log.info('NatureBot started');
       self.tick();
+   }).catch((e) => {
+      log.error('Error: ' + e.message);
+      log.info('NatureBot stopped');
+   });
+};
+
+NatureBot.prototype.init = function() {
+   var world  = this.world;
+   var socket = this.socket;
+   return Promise.all(this.components.map((component) => {
+      log.info('Initializing ' + component.name);
+      return component.init(world, socket);
+   })).catch((e) => {
+      log.error('Init error: ' + e.message);
    });
 };
 
@@ -53,6 +73,8 @@ NatureBot.prototype.tick = function() {
       });
    }).then((updatesAsArrays) => {
       return [].concat.apply([], updatesAsArrays);
+   }).then((updates) => {
+      return updates.filter((update) => !!update);
    }).then((updates) => {
       if (updates.length === 0) {
          log.verbose('No updates for server');

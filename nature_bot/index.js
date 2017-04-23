@@ -9,12 +9,17 @@ var config    = require('./config');
 var domain    = process.env.DOMAIN;
 var secret    = process.env.ELEVATED_SECRET;
 if (env.env === 'production') {
-   secret = process.env.PRODUCTION_SECRET;
    domain = env.production_url;
 }
 
+if (!secret) {
+   log.warning('ELEVATED_SECRET is not set, trying to load local.env.js');
+   var localEnv = require('../server/config/local.env');
+   secret = localEnv.ELEVATED_SECRET;
+}
+
 var socket    = ioClient.connect(domain);
-var bot       = new NatureBot(socket, config);
+var bot       = new NatureBot(domain, socket, config);
 
 socket.on('connect', function() {
    log.info('Connected to server');

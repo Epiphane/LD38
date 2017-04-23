@@ -74,8 +74,19 @@ module.exports = function(io, db) {
       });
    };
 
-   Connection.prototype.remake = function() {
-      WorldController.remake().then(() => io.emit('remake'));
+   Connection.prototype.remake = function(properties) {
+      var socket = this.socket;
+      if (!this.elevated) {
+         socket.emit('remake', false, { message: 'Not Authorized' });
+         return;
+      }
+
+      WorldController.remake(properties).then(() => {
+         io.emit('remake', true);
+      }).catch((e) => {
+         console.error(e);
+         socket.emit('remake', false, { message: e.message });
+      })
    };
 
    Connection.prototype.handle = function(message) {

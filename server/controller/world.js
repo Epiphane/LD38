@@ -5,42 +5,23 @@ var sqldb = require('../sqldb');
 var TILE  = require('../tiles');
 var World = sqldb.World;
 
-var FastSimplexNoise = require('fast-simplex-noise').default;
+var RemakeWorld = require('../../nature_bot/components/RemakeWorld');
 
 var worldInMemory = null;
 var WorldController = module.exports = function() {};
 
 WorldController.populate = function(world) {
-   var tiles = [];
-   var occupants = [];
-   var simplex = new FastSimplexNoise({ frequency: 0.04, max: 1, min: -1, octaves: 8 });
-
-   for (var x = 0; x < world.width; x ++) {
-      for (var y = 0; y < world.height; y ++) {
-         var tile = TILE.GRASS;
-         var elevation = simplex.scaled2D(x, y);
-
-         if (elevation < 0.4)
-            tile = TILE.DIRT;
-         if (elevation < 0.2)
-            tile = TILE.SAND;
-         if (elevation < 0)
-            tile = TILE.WATER;
-
-         tiles.push(tile);
-         occupants.push(0);
-      }
-   }
-
-   return world.update({
-      tiles: tiles,
-      occupants: occupants
-   });
+   return world.update(RemakeWorld.remake(world.width, world.height));
 };
 
-WorldController.remake = function() {
+WorldController.remake = function(properties) {
    return WorldController.getWorld().then((world) => {
-      return WorldController.populate(world);
+      if (properties) {
+         return world.update(properties);
+      }
+      else {
+         return WorldController.populate(world);
+      }
    });
 };
 
