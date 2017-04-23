@@ -12,21 +12,19 @@ define([
    var Icons = new Image();
        Icons.src = './images/ui_icons.png';
 
-   var actions = [
-      { id: 'dig_grass',     text: 'Dig',      icon: [0, 0] },
-      { id: 'dig_dirt',      text: 'Dig',      icon: [1, 0] },
-      { id: 'dig_sand',      text: 'Dig',      icon: [2, 0] },
-      { id: 'shore_up',      text: 'Shore Up', icon: [2, 1] },
-      { id: 'plow_dirt',     text: 'Plow',     icon: [3, 0] },
-      { id: 'water_soil',    text: 'Water',    icon: [6, 2] },
-      { id: 'plant_wheat',   text: 'Plant',    icon: [2, 2] },
-      { id: 'plant_sapling', text: 'Plant',    icon: [0, 2] },
-      { id: 'plant_tree',    text: 'Plant',    icon: [1, 2] },
-      { id: 'grow_wheat',    text: 'Grow',     icon: [6, 2] },
-      { id: 'harvest_wheat', text: 'Harvest',  icon: [6, 2] }
-   ];
-   var actionMap = {};
-   actions.forEach((action) => actionMap[action.id] = action);
+   var actions = {
+      'dig_grass':      { text: 'Dig',      icon: [0, 0] },
+      'dig_dirt':       { text: 'Dig',      icon: [1, 0] },
+      'dig_sand':       { text: 'Dig',      icon: [2, 0] },
+      'shore_up':       { text: 'Shore Up', icon: [2, 1] },
+      'plow_dirt':      { text: 'Plow',     icon: [3, 0] },
+      'water_soil':     { text: 'Water',    icon: [6, 2] },
+      'plant_wheat':    { text: 'Plant',    icon: [2, 2] },
+      'plant_sapling':  { text: 'Plant',    icon: [0, 2] },
+      'plant_tree':     { text: 'Plant',    icon: [1, 2] },
+      'grow_wheat':     { text: 'Grow',     icon: [6, 2] },
+      'harvest_wheat':  { text: 'Harvest',  icon: [6, 2] }
+   };
 
    return Juicy.Component.create('UI', {
       constructor: function() {
@@ -48,12 +46,12 @@ define([
 
          var currentAction = this.entity.action;
          this.actions.forEach(function(action_id, index) {
-            var action = actionMap[action_id];
+            var action = actions[action_id];
 
             context.font = '16px Pixellari, monospace';
             context.fillText((index + 1) + '.', 7, (index + 1) * 50 - 6);
 
-            context.fillStyle = currentAction === action.id ? 'red' : 'white';
+            context.fillStyle = currentAction === action_id ? 'red' : 'white';
 
             context.font = '32px Pixellari, monospace';
             context.fillText(action.text, 70, (index + 1) * 50);

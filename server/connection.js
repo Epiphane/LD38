@@ -10,9 +10,11 @@ module.exports = function(io, db) {
       this.socket = socket;
       this.name = null;
       this.game = null;
+      this.elevated = false;
       this.inventory = new Inventory();
 
-      socket.on('message', this.recv.bind(this));
+      socket.on('updates', this.update.bind(this));
+      socket.on('elevate', this.elevate.bind(this));
       socket.on('action', this.action.bind(this));
       socket.on('remake', this.remake.bind(this));
       socket.on('player_pos', this.positionChanged.bind(this));
@@ -25,8 +27,27 @@ module.exports = function(io, db) {
    Connection.prototype.disconnect = function() {
    };
 
-   Connection.prototype.recv = function(message) {
-      this.game.message(this, message);
+   Connection.prototype.update = function(updates, _id) {
+      if (!this.elevated) {
+         return;
+      }
+
+      var socket = this.socket;
+      WorldController.update(updates).then((updates) => {
+         // TODO error handling...?
+         socket.broadcast.emit('updates', updates);
+         socket.emit('update_' + _id, 'success');
+      }).catch((e) => {
+         console.error('Error performing update: ' + e.message);
+         socket.emit('update_' + _id, 'fail', e.message);
+      })
+   };
+
+   Connection.prototype.elevate = function(message) {
+      if (message === process.env.ELEVATED_SECRET) {
+         this.elevated = true;
+      }
+      this.socket.emit('elevated', this.elevated);
    };
 
    Connection.prototype.positionChanged = function(newPosition) {
@@ -41,12 +62,11 @@ module.exports = function(io, db) {
          return ActionController.action(world, index, action, inventory);
       }).then((result) => {
          if (!result.executed) {
-            console.log(result, _id);
             if (_id) socket.emit('action_' + _id, 'fail');
          }
          else {
             if (_id) socket.emit('action_' + _id, 'success');
-            socket.broadcast.emit('udpates', result.updates);
+            socket.broadcast.emit('updates', result.updates);
          }
       });
    };

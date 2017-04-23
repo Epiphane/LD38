@@ -87,11 +87,15 @@
       };
 
       ActionController.setTile = function(world, index, tile) {
-         return world.setTile(index, tile).then((result) => result);
+         ActionController.assert(index >= 0 && index < world.width * world.height, 'index is out of bounds');
+
+         return world.setTile(index, tile).then((result) => [result]);
       };
 
       ActionController.setOccupant = function(world, index, tile) {
-         return world.setOccupant(index, tile).then((result) => result);
+         ActionController.assert(index >= 0 && index < world.width * world.height, 'index is out of bounds');
+         
+         return world.setOccupant(index, tile).then((result) => [result]);
       };
 
       ActionController.dig_grass = function(world, index, inventory) {

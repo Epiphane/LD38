@@ -21,6 +21,20 @@ define([
          this.minimap = minimap;
       },
 
+      update: function(updates) {
+         var self = this;
+         updates.forEach(function(info) {
+            switch (info[0]) {
+            case 0: // tile
+               self.setTile(info[1], info[2]);
+               break;
+            case 1: // occupant
+               self.setOccupant(info[1], info[2]);
+               break;
+            }
+         });
+      },
+
       set: function(properties) {
          Object.assign(this, properties);
 

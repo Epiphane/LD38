@@ -32,16 +32,7 @@ define([
          connection.on('remake', this.fetch.bind(this));
 
          connection.on('updates', function(updates) {
-            updates.forEach(function(info) {
-               switch (info[0]) {
-               case 0: // tile
-                  self.world.setTile(info[1], info[2]);
-                  break;
-               case 1: // occupant
-                  self.world.setOccupant(info[1], info[2]);
-                  break;
-               }
-            });
+            self.world.update(updates);
          });
 
          connection.on('player_pos_update', function(newPosition) {

@@ -66,4 +66,10 @@ WorldController.getWorld = function() {
    });
 };
 
+WorldController.update = function(updates) {
+   return WorldController.getWorld().then((world) => {
+      return world.performUpdates(updates);
+   });
+};
+
 module.exports = WorldController;

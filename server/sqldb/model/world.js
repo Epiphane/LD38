@@ -26,6 +26,31 @@ module.exports = function(sequelize, DataTypes) {
           return values;
         },
 
+        performUpdates: function(updates) {
+            var self = this;
+
+            var updateSql = [];
+            var updateReplacements = [];
+            updates.forEach((update) => {
+                switch (update[0]) {
+                case 0: // tile
+                    updateSql.push('tiles[?] = ?');
+                    break;
+                case 1: // occupant
+                    updateSql.push('occupants[?] = ?');
+                    break;
+                }
+                updateReplacements.push(update[1], update[2])
+            });
+
+            updateReplacements.push(this._id);
+            return sequelize.query('UPDATE worlds SET ' + updateSql.join(',') + ' WHERE _id = ?', {
+                replacements: updateReplacements
+            }).then(() => {
+                return updates;
+            });
+        },
+
         setTile: function(index, value) {
             return Promise.resolve().then(() => {
                 if (this.tiles[index] === value)
