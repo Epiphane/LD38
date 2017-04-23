@@ -144,7 +144,7 @@ define([
          var speed = 55;
          var character = this.mainChar.getComponent('Character');
 
-         // if (!character.isMoving()) {
+         if (!character.moving) {
             if (game.keyDown('LEFT')) {
                character.move(-1, 0);
             }
@@ -157,7 +157,7 @@ define([
             else if (game.keyDown('DOWN')) {
                character.move(0, 1);
             }
-         // }
+         }
 
          this.mainChar.update();
          this.ticks ++;
