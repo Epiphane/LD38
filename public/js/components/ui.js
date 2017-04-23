@@ -1,21 +1,27 @@
 define([
    'constants/tiles',
    'helpers/terrain',
-   'helpers/atlas'
+   'helpers/atlas',
+   'controller/action'
 ], function(
    TILE,
    TerrainHelper,
-   TerrainAtlas
+   TerrainAtlas,
+   ActionController
 ) {
    var Icons = new Image();
        Icons.src = './images/ui_icons.png';
 
    var actions = [
-      { id: 'dig_grass', text: 'Dig',      icon: [0, 0] },
-      { id: 'dig_dirt',  text: 'Dig',      icon: [1, 0] },
-      { id: 'dig_sand',  text: 'Dig',      icon: [2, 0] },
-      { id: 'shore_up',  text: 'Shore Up', icon: [2, 1] },
-      { id: 'plow_dirt', text: 'Plow',     icon: [3, 0] },
+      { id: 'dig_grass',     text: 'Dig',      icon: [0, 0] },
+      { id: 'dig_dirt',      text: 'Dig',      icon: [1, 0] },
+      { id: 'dig_sand',      text: 'Dig',      icon: [2, 0] },
+      { id: 'shore_up',      text: 'Shore Up', icon: [2, 1] },
+      { id: 'plow_dirt',     text: 'Plow',     icon: [3, 0] },
+      { id: 'water_soil',    text: 'Water',    icon: [6, 2] },
+      { id: 'plant_wheat',   text: 'Plant',    icon: [2, 2] },
+      { id: 'plant_sapling', text: 'Plant',    icon: [0, 2] },
+      { id: 'plant_tree',    text: 'Plant',    icon: [1, 2] }
    ];
    var actionMap = {};
    actions.forEach((action) => actionMap[action.id] = action);
@@ -28,33 +34,17 @@ define([
       update: function(dt, game) {
          var x = this.entity.state.mainChar.getComponent('Character').targetTileX;
          var y = this.entity.state.mainChar.getComponent('Character').targetTileY;
-         var index = x + y * this.entity.state.world.width;
 
-         var currentTile = this.entity.state.world.tiles[index];
-
-         this.actions = [];
-         switch (currentTile) {
-         case TILE.GRASS:
-            this.actions.push(actionMap.dig_grass);
-            break;
-         case TILE.DIRT:
-            this.actions.push(actionMap.dig_dirt);
-            this.actions.push(actionMap.plow_dirt);
-            break;
-         case TILE.SAND:
-            this.actions.push(actionMap.dig_sand);
-            break;
-         case TILE.WATER:
-            this.actions.push(actionMap.shore_up);
-            break;
-         }
+         this.actions = ActionController.available(this.entity.state.world, x, y, this.entity.state.inventory);
       },
 
       render: function(context) {
          context.fillStyle = 'white';
 
          var currentAction = this.entity.action;
-         this.actions.forEach(function(action, index) {
+         this.actions.forEach(function(action_id, index) {
+            var action = actionMap[action_id];
+
             context.font = '16px Pixellari, monospace';
             context.fillText((index + 1) + '.', 7, (index + 1) * 50 - 6);
 
@@ -77,7 +67,7 @@ define([
          keyCode --;
 
          if (keyCode < this.actions.length) {
-            this.entity.state.action(this.actions[keyCode].id);
+            this.entity.state.action(this.actions[keyCode]);
          }
       },
 
@@ -86,7 +76,7 @@ define([
             return;
 
          var index = Math.floor(point.y / 50);
-         this.entity.state.action(this.actions[index].id);
+         this.entity.state.action(this.actions[index]);
       }
    });
 });

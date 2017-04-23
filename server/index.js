@@ -19,6 +19,7 @@ app.use(less('public'));
 app.use('/lib', express.static(__dirname + '/../node_modules/'));
 
 // Game
+app.use('/js/controller', express.static(__dirname + '/controller'));
 app.use('/js/constants/tiles.js', function(req, res) {
    res.end('define([], function() { return ' + JSON.stringify(TILES) + '; })');
 })

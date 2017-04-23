@@ -1,21 +1,29 @@
 define([
-   'constants/materials',
    'helpers/terrain',
    'entities/ui',
+   'entities/world',
+   'entities/minimap',
    'entities/character',
+   'controller/action',
+   'controller/inventory',
    'helpers/math'
 ], function(
-   MATERIALS,
    TerrainHelper,
    UI,
+   World,
+   Minimap,
    Character,
+   ActionController,
+   Inventory,
    MathUtil
 ) {
    return Juicy.State.extend({
       constructor: function(connection) {
          this.connection = connection;
 
-         this.world = null;
+         this.minimap = new Minimap(this);
+         this.world = new World(this, this.minimap);
+
          this.lastDrag = null;
          this.friends = {};
 
@@ -25,7 +33,7 @@ define([
 
          connection.on('updates', function(updates) {
             updates.forEach(function(info) {
-               self.updateTile(info[0], info[1]);
+               self.world.setTile(info[0], info[1]);
             });
          });
 
@@ -42,14 +50,9 @@ define([
          this.cooldown = 0.2;
          this.timer = 0;
          this.ticks = 0;
+         this.action_id = 0;
 
          this.camera = new Juicy.Point();
-
-         this.canvas = document.createElement('canvas');
-         this.context = this.canvas.getContext('2d');
-
-         this.minimap = document.createElement('canvas');
-         this.minimapPixels = null;
 
          this.ui = new UI(this);
          this.mainChar = new Character(this);
@@ -57,85 +60,14 @@ define([
 
          this.minimapFrame = new Juicy.Entity(this, ['Image']);
          this.minimapFrame.setImage('./images/frame.png');
-      },
 
-      init: function() {
-
-      },
-
-      getMinimapColor: function(tile) {
-         return MATERIALS[tile].pixel;
-      },
-
-      setMinimapPixel: function(index, tile) {
-         var pixels = this.minimapPixels.data;
-         var color = this.getMinimapColor(tile);
-
-         pixels[4 * index] = color[0];
-         pixels[4 * index + 1] = color[1];
-         pixels[4 * index + 2] = color[2];
-         pixels[4 * index + 3] = color[3];
-      },
-
-      setMapTile: function(index, tile) {
-         this.world.tiles[index] = tile;
-         var x = index % this.world.width;
-         var y = Math.floor(index / this.world.width);
-
-         for (var i = x - 1; i <= x; i ++) {
-            for (var j = y - 1; j <= y; j ++) {
-               if (i < 0 || j < 0) continue;
-
-               TerrainHelper.draw(this.canvas.getContext('2d'),
-                                  i,
-                                  j,
-                                  this.world,
-                                  i,
-                                  j);
-            }
-         }
-      },
-
-      updateTile: function(index, value) {
-         this.setMinimapPixel(index, value);
-         this.setMapTile(index, value);
-      },
-
-      generateMap: function() {
-         this.canvas.width  = this.world.width * TerrainHelper.tilesize;
-         this.canvas.height = this.world.height * TerrainHelper.tilesize;
-         var context = this.canvas.getContext('2d');
-
-         for (var i = 0; i < this.world.width; i ++) {
-            for (var j = 0; j < this.world.height; j ++) {
-               TerrainHelper.draw(context,
-                                  i,
-                                  j,
-                                  this.world,
-                                  i,
-                                  j);
-            }
-         }
-
-      },
-
-      generateMinimap: function() {
-         var self = this;
-         this.world.tiles.forEach(function(tile, index) {
-            self.setMinimapPixel(index, tile);
-         });
+         this.inventory = new Inventory();
       },
 
       fetch: function() {
          var self = this;
          $.get('/api/world').then(function(world) {
-            self.world = world;
-            self.generateMap();
-
-            self.minimap.width = world.width;
-            self.minimap.height = world.height;
-            self.minimapPixels = new ImageData(new Uint8ClampedArray(4 * world.width * world.height), world.width, world.height);
-            self.generateMinimap();
+            self.world.set(world);
          });
       },
 
@@ -182,13 +114,31 @@ define([
       },
 
       action: function(action) {
-         if (action !== 'none') {
-            var x = this.mainChar.getComponent('Character').targetTileX;
-            var y = this.mainChar.getComponent('Character').targetTileY;
-            var index = x + y * this.world.width;
+         var self = this;
 
-            this.connection.emit('action', index, action);
-         }
+         var x = this.mainChar.getComponent('Character').targetTileX;
+         var y = this.mainChar.getComponent('Character').targetTileY;
+         var index = x + y * this.world.width;
+         var _id = ++this.action_id;
+
+         // Do the action client-side as well
+         var localExecute = ActionController.action(this.world, index, action, this.inventory);
+         if (!localExecute.then) localExecute = $.Deferred().resolve(localExecute);
+         localExecute.then(function(localResult) {
+            // TODO I wonder how much delay this introduces to sending out actions
+            if (localResult.executed) {
+               // We can ignore the updates cause they already happened lol
+
+               self.connection.emit('action', index, action, _id);
+               self.connection.onOnce('action_' + _id, function(response) {
+                  console.log('action_' + _id, response);
+               })
+            }
+            else {
+               console.error('Invalid action: ' + localResult.reason);
+            }
+         });
+
       },
 
       activate: function(point) {
@@ -271,12 +221,9 @@ define([
       },
 
       render: function(context, width, height) {
-         if (!this.world || !TerrainHelper.ready) {
+         if (!this.world.ready || !TerrainHelper.ready) {
             return;
          }
-
-         // Draw minimap
-         this.minimap.getContext('2d').putImageData(this.minimapPixels, 0, 0);
 
          if (this.camera.x < 0)
             this.camera.x = 0;
@@ -290,7 +237,7 @@ define([
          // Draw pre-rendered map
          context.save();
          context.translate(-this.camera.x, -this.camera.y);
-         context.drawImage(this.canvas, this.camera.x, this.camera.y, width, height, this.camera.x, this.camera.y, width, height);
+         this.world.render(context, this.camera.x, this.camera.y, width, height);
          context.translate(-TerrainHelper.tilesize / 2, -TerrainHelper.tilesize / 2);
          this.mainChar.render(context);
          for (var friendID in this.friends) {
@@ -298,24 +245,27 @@ define([
          }
          context.restore();
 
+         // Minimap frame
          this.minimapFrame.position.x = width - this.minimapFrame.width;
          this.minimapFrame.render(context);
 
-         if (this.minimap) {
-            var scale = 2;
-            var minimap_x = width - this.minimap.width * scale - 4;
-            var minimap_y = 4;
+         // Minimap
+         {
+            context.save();
+            context.translate(this.minimapFrame.position.x + 4, this.minimapFrame.position.y + 4);
+            context.scale(2, 2);
 
-            context.drawImage(this.minimap,
-                              minimap_x,
-                              minimap_y,
-                              this.minimap.width * scale,
-                              this.minimap.height * scale);
+            this.minimap.render(context);
 
-            var viewport_w = scale * Math.floor(width / TerrainHelper.tilesize);
-            var viewport_h = scale * Math.floor(height / TerrainHelper.tilesize);
-            context.fillStyle = 'rgba(0, 0, 0, 0.3)';
-            context.fillRect(minimap_x + scale * this.camera.x / TerrainHelper.tilesize, minimap_y + scale * this.camera.y / TerrainHelper.tilesize, viewport_w, viewport_h);
+            // Cool lil black box over the minimap
+            context.fillStyle = 'rgba(0, 0, 0, 0.5)';
+            context.fillRect(
+               this.camera.x / TerrainHelper.tilesize, 
+               this.camera.y / TerrainHelper.tilesize, 
+               Math.floor(width / TerrainHelper.tilesize), 
+               Math.floor(height / TerrainHelper.tilesize));
+
+            context.restore();
          }
 
          this.ui.position.x = width - this.minimapFrame.width;

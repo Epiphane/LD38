@@ -29,6 +29,8 @@ require([
       D: 68,
    });
 
+   document.getElementById('game-canvas').getContext('2d').imageSmoothingEnabled = false;
+
    window.onmousewheel = function(e) {
       Juicy.Game.trigger('mousewheel', e);
    }
