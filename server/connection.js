@@ -10,8 +10,12 @@ module.exports = function(io, db) {
       this.socket = socket;
       this.name = null;
       this.game = null;
-      this.elevated = false;
+      this.elevated = (process.env.NODE_ENV === 'development');
       this.inventory = new Inventory();
+
+      if (this.elevated) {
+         this.inventory.addItem('sandbox');
+      }
 
       socket.on('updates', this.update.bind(this));
       socket.on('elevate', this.elevate.bind(this));
@@ -65,7 +69,7 @@ module.exports = function(io, db) {
          return ActionController.action(world, index, action, inventory);
       }).then((result) => {
          if (!result.executed) {
-            if (_id) socket.emit('action_' + _id, 'fail');
+            if (_id) socket.emit('action_' + _id, 'fail', result.reason);
          }
          else {
             if (_id) socket.emit('action_' + _id, 'success');

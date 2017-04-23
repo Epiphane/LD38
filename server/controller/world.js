@@ -3,9 +3,10 @@
 var Promise = require('promise');
 var sqldb = require('../sqldb');
 var TILE  = require('../tiles');
+var OCCUPANT  = require('../occupants');
 var World = sqldb.World;
 
-var RemakeWorld = require('../../nature_bot/components/RemakeWorld');
+var RemakeWorld = require('../../nature_bot/components/RemakeWorld')(TILE, OCCUPANT);
 
 var worldInMemory = null;
 var WorldController = module.exports = function() {};

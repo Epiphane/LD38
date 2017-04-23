@@ -19,6 +19,7 @@ define([
 ) {
    return Juicy.State.extend({
       constructor: function(connection) {
+         this.sandbox = location.search.indexOf('sandbox') >= 0;
          this.connection = connection;
 
          this.minimap = new Minimap(this);
@@ -52,7 +53,7 @@ define([
 
          this.camera = new Juicy.Point();
 
-         this.ui = new UI(this);
+         this.ui = new UI(this, this.sandbox);
          this.mainChar = new Character(this);
          this.mainChar.uuid = MathUtil.makeUuid();
 
@@ -60,6 +61,8 @@ define([
          this.minimapFrame.setImage('./images/frame.png');
 
          this.inventory = new Inventory();
+         if (this.sandbox)
+            this.inventory.addItem('sandbox');
       },
 
       fetch: function() {
@@ -111,12 +114,8 @@ define([
          this.ui.update(dt);
       },
 
-      action: function(action) {
+      doAction: function(action, index) {
          var self = this;
-
-         var x = this.mainChar.getComponent('Character').targetTileX;
-         var y = this.mainChar.getComponent('Character').targetTileY;
-         var index = x + y * this.world.width;
          var _id = ++this.action_id;
 
          // Do the action client-side as well
@@ -128,26 +127,36 @@ define([
                // We can ignore the updates cause they already happened lol
 
                self.connection.emit('action', index, action, _id);
-               self.connection.onOnce('action_' + _id, function(response) {
-                  console.log('action_' + _id, response);
+               self.connection.onOnce('action_' + _id, function(response, message) {
+                  if (response === 'fail') {
+                     console.error('Server rejected action_' + _id + ': ' + message);
+                     console.error('Backtracking is unimplemented');
+                  }
                })
             }
             else {
                console.error('Invalid action: ' + localResult.reason);
             }
          });
+      },
 
+      action: function(action) {
+         var x = this.mainChar.getComponent('Character').targetTileX;
+         var y = this.mainChar.getComponent('Character').targetTileY;
+         var index = x + y * this.world.width;
+
+         return this.doAction(action, index);
       },
 
       activate: function(point) {
          if (!this.world)
             return;
 
-         // Sandbox off by default
-         if (!window.SANDBOX) {
-            point.x = Math.floor((point.x + this.camera.x) / TerrainHelper.tilesize + 0.5);
-            point.y = Math.floor((point.y + this.camera.y) / TerrainHelper.tilesize + 0.5);
+         point.x = Math.floor((point.x + this.camera.x) / TerrainHelper.tilesize + 0.5);
+         point.y = Math.floor((point.y + this.camera.y) / TerrainHelper.tilesize + 0.5);
 
+         // Sandbox off by default
+         if (!this.sandbox) {
             if (point.x === 0) point.x = 1;
             if (point.y === 0) point.y = 1;
             if (point.x === this.world.width) point.x = this.world.width - 1;
@@ -156,9 +165,6 @@ define([
             this.mainChar.position = point.mult(TerrainHelper.tilesize);
          }
          else {
-            point.x = Math.floor((point.x + this.camera.x) / TerrainHelper.tilesize + 0.5);
-            point.y = Math.floor((point.y + this.camera.y) / TerrainHelper.tilesize + 0.5);
-
             if (this.lastDrag && point.isEqual(this.lastDrag)) {
                return;
             }
@@ -168,7 +174,7 @@ define([
             this.lastDrag = point;
 
             if (this.ui.action !== 'none') {
-               this.connection.emit('action', index, this.ui.action);
+               this.doAction('place_' + this.ui.action, index);
             }
          }
       },

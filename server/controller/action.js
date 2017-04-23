@@ -34,6 +34,13 @@
          var right = ActionController.getTile(world, x + 1, y);
 
          var actions = [];
+
+         if (inventory.hasItem('sandbox')) {
+            for (var tile in TILE) {
+               actions.push('place_' + tile);               
+            }
+         }
+
          switch (currentTile) {
          case TILE.GRASS:
                                                       actions.push('dig_grass');
@@ -153,6 +160,13 @@
          return ActionController.setOccupant(world, index, occupant + 1);
       };
 
+      ActionController.placeTile = function(world, index, inventory, tile) {
+         ActionController.assert(TILE.hasOwnProperty(tile), 'tile ' + tile + ' is not valid');
+         ActionController.assert(inventory.hasItem('sandbox'), 'cannot place tiles without the sandbox');
+
+         return ActionController.setTile(world, index, TILE[tile]);
+      };
+
       ActionController.action = function(world, index, action, inventory) {
          var x = index % world.width;
          var y = Math.floor(index / world.width);
@@ -160,6 +174,13 @@
 
          if (availableActions.indexOf(action) < 0) {
             return { executed: false, reason: 'Action ' + action + ' not available.' };
+         }
+         else if (action.indexOf('place_') === 0) {
+            return ActionController.placeTile(world, index, inventory, action.substr(6)).then((updates) => {
+               return { executed: true, updates: updates };
+            }).catch((e) => {
+               return { executed: false, reason: e.message };
+            });
          }
          else if (!ActionController.hasOwnProperty(action)) {
             return { executed: false, reason: 'ActionController.' + action + ' does not exist.' };

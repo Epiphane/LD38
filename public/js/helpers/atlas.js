@@ -164,11 +164,10 @@ define([
           mBR = MATERIALS[br];
       var mats = [mTL, mTR, mBL, mBR];
 
-      var baseOffset = [3, 3];
       var baseHeight = 100;
       var maxHeight = -100;
       mats.forEach(function(mat) {
-         if (mat.height < baseHeight) { baseOffset = mat.offset_below; baseHeight = mat.height; }
+         if (mat.height < baseHeight) { baseHeight = mat.height; }
          if (mat.height > maxHeight) { maxHeight = mat.height; }
       });
 
@@ -176,12 +175,14 @@ define([
 
       var baseTiles  = 0;
       mats.forEach(function(mat, i) { if (mat.height === baseHeight) { baseTiles += (1 << i); } });
-      var offset = Object.assign({}, baseOffset);
-      if (baseTiles === 0xF) {
-         Object.assign(offset, mTL.offset_basic);
+      var offset = [];
+      var candidate = mats.find((mat) => mat.height === baseHeight);
+      if (baseTiles === 0xF || candidate.key !== 'WATER') {
+         Object.assign(offset, candidate.offset_basic);
          offset[0] += i % 3;
       }
       else {
+         Object.assign(offset, candidate.offset_below);
          var b_off = AtlasHelper.getOffsetFromApplicableTiles(baseTiles, true /* inverse */);
          offset[0] += b_off[0];
          offset[1] += b_off[1];
