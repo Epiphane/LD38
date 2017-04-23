@@ -28,6 +28,7 @@ define([
 
          this.cooldown = 0.2;
          this.timer = 0;
+         this.ticks = 0;
 
          this.camera = new Juicy.Point();
 
@@ -39,6 +40,7 @@ define([
 
          this.ui = new UI(this);
          this.mainChar = new Character(this);
+         this.mainChar.setImage('./images/player.png');
 
          this.minimapFrame = new Juicy.Entity(this, ['Image']);
          this.minimapFrame.setImage('./images/frame.png');
@@ -132,19 +134,26 @@ define([
          if (!this.world)
             return;
 
-         var speed = 350;
-         if (game.keyDown('LEFT')) {
-            this.camera.x -= speed * dt;
-         }
-         if (game.keyDown('RIGHT')) {
-            this.camera.x += speed * dt;
-         }
-         if (game.keyDown('UP')) {
-            this.camera.y -= speed * dt;
-         }
-         if (game.keyDown('DOWN')) {
-            this.camera.y += speed * dt;
-         }
+         var speed = 55;
+         var character = this.mainChar.getComponent('Character');
+
+         // if (!character.isMoving()) {
+            if (game.keyDown('LEFT')) {
+               character.move(-1, 0);
+            }
+            else if (game.keyDown('RIGHT')) {
+               character.move(1, 0);
+            }
+            else if (game.keyDown('UP')) {
+               character.move(0, -1);
+            }
+            else if (game.keyDown('DOWN')) {
+               character.move(0, 1);
+            }
+         // }
+
+         this.mainChar.update();
+         this.ticks ++;
 
          this.ui.update(dt);
       },

@@ -1,13 +1,17 @@
 define([
-   'components/character'
+   'components/character',
+   'components/sprite'
 ], function(
-   CharComponent
+   CharComponent,
+   SpriteComponent
 ) {
    return Juicy.Entity.extend({
-      components: [CharComponent],
+      components: [CharComponent, 'Image'],
 
       init: function() {
          this.action = 0;
+         this.getComponent('Image').TILE_WIDTH  = 32;
+         this.getComponent('Image').TILE_HEIGHT = 32;
       },
    })
 })
