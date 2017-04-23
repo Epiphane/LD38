@@ -26,8 +26,9 @@ define([
       },
 
       update: function(dt, game) {
-         var point = this.entity.state.mainChar.position.mult(1 / TerrainHelper.tilesize);
-         var index = point.x + point.y * this.entity.state.world.width;
+         var x = this.entity.state.mainChar.getComponent('Character').targetTileX;
+         var y = this.entity.state.mainChar.getComponent('Character').targetTileY;
+         var index = x + y * this.entity.state.world.width;
 
          var currentTile = this.entity.state.world.tiles[index];
 
