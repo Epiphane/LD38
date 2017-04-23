@@ -265,11 +265,13 @@ define([
             context.translate(this.minimapFrame.position.x + 4, this.minimapFrame.position.y + 4);
             context.scale(2, 2);
 
-            this.minimap.render(context);
+            this.minimap.render(context, 0, 0, this.world.width, this.world.height);
 
             // Cool lil black box over the minimap
             context.fillStyle = 'rgba(0, 0, 0, 0.5)';
-            context.fillRect(
+            context.fillRect(0, 0, this.world.width, this.world.height);
+            
+            this.minimap.render(context, 
                this.camera.x / TerrainHelper.tilesize, 
                this.camera.y / TerrainHelper.tilesize, 
                Math.floor(width / TerrainHelper.tilesize), 

@@ -44,12 +44,11 @@ define([
          });
       },
 
-      render: function(context) {
-         // console.log(arguments);
+      render: function(context, x, y, w, h) {
          this.context.putImageData(this.pixels, 0, 0);
          this.context.imageSmoothingEnabled = false;
 
-         context.drawImage(this.canvas, 0, 0);
+         context.drawImage(this.canvas, x, y, w, h, x, y, w, h);
       }
    });
 });
