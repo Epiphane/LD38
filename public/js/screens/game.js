@@ -36,7 +36,7 @@ define([
                self.friends[newPosition.uuid] = movingFriend;
             }
             movingFriend.getComponent('Character').walkToTile(newPosition.x, newPosition.y);
-            movingFriend.direction = newPosition.direction;
+            movingFriend.getComponent('Character').direction = newPosition.direction;
          });
 
          this.cooldown = 0.2;
