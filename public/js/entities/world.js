@@ -39,7 +39,17 @@ define([
          this.tiles[index] = value;
          this.getComponent('WorldMap').updateTile(this, index);
 
-         return promise.resolve([index, value]);
+         return promise.resolve([0 /* occupant */, index, value]);
+      },
+
+      setOccupant: function(index, value) {
+         // Use a promise to match the functionality of sqldb/model/world
+         var promise = $.Deferred();
+
+         this.occupants[index] = value;
+         this.getComponent('WorldMap').updateTile(this, index);
+
+         return promise.resolve([1 /* occupant */, index, value]);
       }
    });
 });

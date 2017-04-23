@@ -10,6 +10,7 @@ var Connection = require('./connection')(io, sqldb);
 var less = require('less-middleware');
 
 var TILES = require('./tiles');
+var OCCUPANTS = require('./occupants');
 
 // API
 app.use('/api', api);
@@ -22,7 +23,10 @@ app.use('/lib', express.static(__dirname + '/../node_modules/'));
 app.use('/js/controller', express.static(__dirname + '/controller'));
 app.use('/js/constants/tiles.js', function(req, res) {
    res.end('define([], function() { return ' + JSON.stringify(TILES) + '; })');
-})
+});
+app.use('/js/constants/occupants.js', function(req, res) {
+   res.end('define([], function() { return ' + JSON.stringify(OCCUPANTS) + '; })');
+});
 app.use('/', express.static(__dirname + '/../public/'));
 
 http.listen(process.env.PORT || 3000, function(){

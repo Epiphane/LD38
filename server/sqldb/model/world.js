@@ -7,9 +7,8 @@ module.exports = function(sequelize, DataTypes) {
             autoIncrement: true,
             primaryKey: true
         },
-        tiles: {
-            type: DataTypes.ARRAY(DataTypes.INTEGER)
-        },
+        tiles: DataTypes.ARRAY(DataTypes.INTEGER),
+        occupants: DataTypes.ARRAY(DataTypes.INTEGER),
         width: {
             type: DataTypes.INTEGER,
             defaultValue: 100
@@ -38,7 +37,22 @@ module.exports = function(sequelize, DataTypes) {
                 sequelize.query('UPDATE worlds SET tiles[?] = ? WHERE _id = ?', {
                     replacements: [index, value, this._id]
                 });
-                return [index, value];
+                return [0 /* tile */, index, value];
+            });
+        },
+
+        setOccupant: function(index, value) {
+            return Promise.resolve().then(() => {
+                if (this.occupants[index] === value)
+                    return [index, value];
+
+                this.occupants[index] = value;
+
+                // Don't wait on the query
+                sequelize.query('UPDATE worlds SET occupants[?] = ? WHERE _id = ?', {
+                    replacements: [index, value, this._id]
+                });
+                return [1 /* occupant */, index, value];
             });
         }
       }

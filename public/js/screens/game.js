@@ -33,7 +33,14 @@ define([
 
          connection.on('updates', function(updates) {
             updates.forEach(function(info) {
-               self.world.setTile(info[0], info[1]);
+               switch (info[0]) {
+               case 0: // tile
+                  self.world.setTile(info[1], info[2]);
+                  break;
+               case 1: // occupant
+                  self.world.setOccupant(info[1], info[2]);
+                  break;
+               }
             });
          });
 

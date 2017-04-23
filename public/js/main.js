@@ -42,7 +42,6 @@ require([
 
    // Initialize connection to server
    var connection = new ConnectionManager();
-   var content = new ContentManager($('#content'));
 
    var disconnect = $('#disconnect');
    connection.on('disconnect', function() {
@@ -50,14 +49,6 @@ require([
    });
    connection.on('reconnect', function() {
       disconnect.hide();
-   });
-
-   connection.on('update', function(updates) {
-      content.onUpdate(updates);
-   });
-
-   connection.on('players', function(players) {
-      // console.log(players);
    });
 
    Juicy.Game.setState(new GameScreen(connection)).run();

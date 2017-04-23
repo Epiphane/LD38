@@ -21,7 +21,9 @@ define([
       { id: 'water_soil',    text: 'Water',    icon: [6, 2] },
       { id: 'plant_wheat',   text: 'Plant',    icon: [2, 2] },
       { id: 'plant_sapling', text: 'Plant',    icon: [0, 2] },
-      { id: 'plant_tree',    text: 'Plant',    icon: [1, 2] }
+      { id: 'plant_tree',    text: 'Plant',    icon: [1, 2] },
+      { id: 'grow_wheat',    text: 'Grow',     icon: [6, 2] },
+      { id: 'harvest_wheat', text: 'Harvest',  icon: [6, 2] }
    ];
    var actionMap = {};
    actions.forEach((action) => actionMap[action.id] = action);
@@ -32,6 +34,9 @@ define([
       },
 
       update: function(dt, game) {
+         if (!this.entity.state.world.ready)
+            return;
+
          var x = this.entity.state.mainChar.getComponent('Character').targetTileX;
          var y = this.entity.state.mainChar.getComponent('Character').targetTileY;
 

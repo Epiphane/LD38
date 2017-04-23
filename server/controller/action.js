@@ -4,7 +4,7 @@
 
    var ActionController = {};
 
-   ActionController.init = function(TILE) {
+   ActionController.init = function(TILE, OCCUPANT) {
 
       ActionController.getTile = function(world, x, y) {
          if (x < 0) x = 0;
@@ -15,9 +15,19 @@
          return world.tiles[x + y * world.width];
       }
 
+      ActionController.getOccupant = function(world, x, y) {
+         if (x < 0) x = 0;
+         if (y < 0) y = 0;
+         if (x >= world.width) x = world.width - 1;
+         if (y >= world.width) y = world.width - 1;
+
+         return world.occupants[x + y * world.width];
+      }
+
       ActionController.available = function(world, x, y, inventory) {
          var inventory = inventory;
          var currentTile = ActionController.getTile(world, x, y);
+         var currentOccupant = ActionController.getOccupant(world, x, y);
          var above = ActionController.getTile(world, x, y - 1);
          var below = ActionController.getTile(world, x, y + 1);
          var left  = ActionController.getTile(world, x - 1, y);
@@ -31,6 +41,7 @@
             break;
          
          case TILE.SOIL:
+         case TILE.SOIL_WET:
                                                       actions.push('water_soil');
             if (inventory.hasItem('seed_wheat'))    { actions.push('plant_wheat'); }
             if (inventory.hasItem('seed_sapling'))  { actions.push('plant_sapling'); }
@@ -54,6 +65,18 @@
             break;
          }
 
+         switch (currentOccupant) {
+         case OCCUPANT.WHEAT_SEED:
+         case OCCUPANT.WHEAT_SPROUT:
+         case OCCUPANT.WHEAT_GROWING:
+            actions.push('grow_wheat');
+            break;
+
+         case OCCUPANT.WHEAT_COMPLEAT:
+            actions.push('harvest_wheat');
+            break;
+         }
+
          return actions;
       };
 
@@ -65,6 +88,10 @@
 
       ActionController.setTile = function(world, index, tile) {
          return world.setTile(index, tile).then((result) => result);
+      };
+
+      ActionController.setOccupant = function(world, index, tile) {
+         return world.setOccupant(index, tile).then((result) => result);
       };
 
       ActionController.dig_grass = function(world, index, inventory) {
@@ -104,9 +131,22 @@
       };
 
       ActionController.water_soil = function(world, index, inventory) {
-         ActionController.assert(world.tiles[index] === TILE.SOIL, 'water_soil must be on soil');
+         ActionController.assert(world.tiles[index] === TILE.SOIL || world.tiles[index] === TILE.SOIL_WET, 'plant_wheat must be on soil');
 
          return ActionController.setTile(world, index, TILE.SOIL_WET);
+      };
+
+      ActionController.plant_wheat = function(world, index, inventory) {
+         ActionController.assert(world.tiles[index] === TILE.SOIL || world.tiles[index] === TILE.SOIL_WET, 'plant_wheat must be on soil');
+
+         return ActionController.setOccupant(world, index, OCCUPANT.WHEAT_SEED)
+      };
+
+      ActionController.grow_wheat = function(world, index, inventory) {
+         var occupant = world.occupants[index];
+         ActionController.assert(occupant >= OCCUPANT.WHEAT_SEED && occupant <= OCCUPANT.WHEAT_COMPLEAT, 'grow_wheat must be used on wheat');
+
+         return ActionController.setOccupant(world, index, occupant + 1);
       };
 
       ActionController.action = function(world, index, action, inventory) {
@@ -134,10 +174,10 @@
 
    // web AND server woahh
    if (typeof(exports) === 'object') {
-      module.exports = ActionController.init(require('../tiles'));
+      module.exports = ActionController.init(require('../tiles'), require('../occupants'));
    }
    else {
-      define(['constants/tiles'], function(TILE) { return ActionController.init(TILE); });
+      define(['constants/tiles', 'constants/occupants'], function(TILE, OCCUPANTS) { return ActionController.init(TILE, OCCUPANTS); });
    }
 
 })();
