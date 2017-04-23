@@ -183,8 +183,9 @@ define([
 
       action: function(action) {
          if (action !== 'none') {
-            var point = this.mainChar.position.mult(1 / TerrainHelper.tilesize);
-            var index = point.x + point.y * this.world.width;
+            var x = this.mainChar.getComponent('Character').targetTileX;
+            var y = this.mainChar.getComponent('Character').targetTileY;
+            var index = x + y * this.world.width;
 
             this.connection.emit('action', index, action);
          }
