@@ -205,7 +205,7 @@ define([
             if (point.x >= this.world.width) point.x = this.world.width - 1;
             if (point.y >= this.world.height) point.y = this.world.height - 1;
 
-            this.mainChar.mouseTarget = point;
+            this.mainChar.getComponent('Character').mouseTarget = point;
          }
          else {
             point.x = Math.floor((point.x + this.camera.x) / TerrainHelper.tilesize + 0.5);

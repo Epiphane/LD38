@@ -25,6 +25,7 @@ define([
 
       direction: 0,
       moving: false,
+      mouseTarget: null,
 
       // How many ticks it takes to go from one tile to the next
       ticksPerMovement: 7,
@@ -59,6 +60,9 @@ define([
       },
 
       move: function(dx, dy, conn) {
+         // Cancel mouse movement
+         this.mouseTarget = null;
+
          if (this.moving === false) {
             if (dx ===  1) this.direction = 2;
             if (dx === -1) this.direction = 1;
@@ -95,6 +99,23 @@ define([
 
       update: function() {
          this.doWalkAnim();
+
+         if (!this.moving && this.mouseTarget !== null) {
+            if (this.tileX === this.mouseTarget.x &&
+               this.tileY === this.mouseTarget.y) {
+               this.mouseTarget = null; // Done!
+            }
+
+            // Find next step w A-star
+            var nextTile = window.astar(this.entity.state.game, this.entity.state.world,
+               {x: this.tileX, y: this.tileY}, this.mouseTarget);
+
+            if (nextTile === null) {
+               this.mouseTarget = null; // Unreachable target
+            }
+
+            this.walkToTile(nextTile.x, nextTile.y);
+         }
 
          if (this.moving) {
             this.ticksMoved ++;
