@@ -1,11 +1,17 @@
 define([
-   'components/sprite'
+   'components/sprite',
+   'helpers/terrain',
+   'helpers/math'
 ], function(
-   SpriteComponent
+   SpriteComponent,
+   TerrainHelper,
+   MathUtil
 ) {
    return Juicy.Component.create('Character', {
-      x: 0,
-      y: 0,
+      tileX: 0,
+      tileY: 0,
+      targetTileX: 0,
+      targetTileY: 0,
 
       // Walk cycle frame stuff
       walkAnimSpeed: 4,
@@ -18,6 +24,11 @@ define([
       attackEndFrame: 9,
 
       direction: 0,
+      moving: false,
+
+      // How many ticks it takes to go from one tile to the next
+      ticksPerMovement: 7,
+      ticksMoved: 0,
 
       isMoving: function() {
          return true;
@@ -36,16 +47,26 @@ define([
       },
 
       move: function(dx, dy) {
-         if (dx ===  1) this.direction = 2;
-         if (dx === -1) this.direction = 1;
-         if (dy ===  1) this.direction = 0;
-         if (dy === -1) this.direction = 3;
+         if (this.moving === false) {
+            if (dx ===  1) this.direction = 2;
+            if (dx === -1) this.direction = 1;
+            if (dy ===  1) this.direction = 0;
+            if (dy === -1) this.direction = 3;
+
+            this.targetTileX = this.tileX + dx;
+            this.targetTileY = this.tileY + dy;
+            this.targetX = this.targetTileX * TerrainHelper.tilesize;
+            this.targetY = this.targetTileY * TerrainHelper.tilesize;
+            this.premoveX = this.entity.position.x;
+            this.premoveY = this.entity.position.y;
+
+            this.moving = true;
+            this.ticksMoved = 0;
+         }
       },
 
-      update: function() {
-         var originalFrame = this.entity.getComponent('Image').frame;
-
-         if (this.isMoving()) {
+      doWalkAnim: function() {
+         if (this.moving) {
             // Animate through the character's walk cycle every three frames
             if (this.entity.state.ticks % this.walkAnimSpeed === 0) {
                var walkCycleLength = this.walkEndFrame - this.walkStartFrame;
@@ -54,22 +75,31 @@ define([
 
             this.entity.getComponent('Image').frame = this.walkStartFrame + this.walkOffset;
          }
-         else if (this.isAttacking()) {
-            if (this.entity.state.ticks % this.attackAnimSpeed === 0) {
-               this.attackOffset = ++this.attackOffset % this.attackLength;
-            }
-
-            var attackCycleLength = this.attackEndFrame - this.attackStartFrame;
-            var attackFrame = this.attackOffset % attackCycleLength;
-            this.entity.getComponent('Image').frame = this.attackStartFrame + attackFrame;
-         }
          else {
             this.entity.getComponent('Image').frame = this.walkStartFrame;
          }
+      },
+
+      update: function() {
+         this.doWalkAnim();
+
+         if (this.moving) {
+            this.ticksMoved ++;
+            this.entity.position.x = MathUtil.lerp(this.premoveX, this.targetX,
+                this.ticksMoved / this.ticksPerMovement);
+            this.entity.position.y = MathUtil.lerp(this.premoveY, this.targetY,
+                this.ticksMoved / this.ticksPerMovement);
+
+            if (this.ticksMoved >= this.ticksPerMovement) {
+               this.moving = false;
+               this.premoveX = this.entity.position.x;
+               this.premoveY = this.entity.position.y;
+               this.tileX = this.targetTileX;
+               this.tileY = this.targetTileY;
+            }
+         }
 
          this.entity.getComponent('Image').frame += this.getDirectionFrame();
-
-         return originalFrame != this.entity.getComponent('Image').frame; // Returns TRUE if needs redraw
       },
    });
 });
