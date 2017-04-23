@@ -62,21 +62,69 @@ WorldController.getWorld = function() {
    });
 };
 
-WorldController.activate = function(index, action) {
-   return WorldController.getWorld().then((world) => {      
-      var value = (world.tiles[index] + 1) % 2;
-      value = action;
-      if (world.tiles[index] === value)
-         return value;
+WorldController.setTile = function(world, index, value) {
+   if (world.tiles[index] === value)
+      return [index, value];
 
-      world.tiles[index] = value;
+   world.tiles[index] = value;
 
-      sqldb.sequelize.query('UPDATE worlds SET tiles[?] = ? WHERE _id = ?', {
-         replacements: [index, value, world._id]
-      }).then(() => {
-      })
-      return value;
-   })
+   // Don't wait on the query
+   sqldb.sequelize.query('UPDATE worlds SET tiles[?] = ? WHERE _id = ?', {
+      replacements: [index, value, world._id]
+   });
+   return [index, value];
+};
+
+// This will "Gracefully" ensure that you only do actions at the right time
+WorldController.assert = function(assertion, message) {
+   if (!assertion)
+      throw new Error('Assertion failed: ' + (message || ''));
+};
+
+WorldController.dig_grass = function(world, index) {
+   WorldController.assert(world.tiles[index] === TILE.GRASS, 'dig_grass must be on grass');
+
+   return [WorldController.setTile(world, index, TILE.DIRT)];
+};
+
+WorldController.dig_dirt = function(world, index) {
+   WorldController.assert(world.tiles[index] === TILE.DIRT, 'dig_dirt must be on dirt');
+
+   return [WorldController.setTile(world, index, TILE.DIRT)];
+};
+
+WorldController.dig_sand = function(world, index) {
+   WorldController.assert(world.tiles[index] === TILE.SAND, 'dig_sand must be on sand');
+
+   return [WorldController.setTile(world, index, TILE.WATER)];
+};
+
+WorldController.shore_up = function(world, index) {
+   WorldController.assert(world.tiles[index] === TILE.WATER, 'shore_up must be on water');
+
+   return [WorldController.setTile(world, index, TILE.SAND)];
+};
+
+WorldController.plow_dirt = function(world, index) {
+   WorldController.assert(world.tiles[index] === TILE.DIRT, 'plow_dirt must be on dirt');
+
+   return [WorldController.setTile(world, index, TILE.DIRT)];
+};
+
+WorldController.action = function(index, action) {
+   return WorldController.getWorld().then((world) => {
+      if (WorldController[action]) {
+         return WorldController[action](world, index);
+      }
+      else {
+         return [];
+      }
+   }).catch((e) => {
+      console.error('Error:', e);
+
+      // TODO some sort of "revert" update
+      return [];
+   });
 };
 
 module.exports = WorldController;
