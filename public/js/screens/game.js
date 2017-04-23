@@ -20,18 +20,14 @@ define([
          connection.on('connect', this.fetch.bind(this));
          connection.on('remake', this.fetch.bind(this));
 
-         connection.on('update', function(info) {
-            self.updateTile(info[0], info[1]);
+         connection.on('updates', function(updates) {
+            updates.forEach(function(info) {
+               self.updateTile(info[0], info[1]);
+            });
          });
 
          this.cooldown = 0.2;
          this.timer = 0;
-
-         if (!TerrainHelper.ready()) {
-            TerrainHelper.onReady(function() {
-               self.updated = true;
-            });
-         }
 
          this.camera = new Juicy.Point();
 
@@ -66,10 +62,46 @@ define([
          pixels[4 * index + 3] = color[3];
       },
 
+      setMapTile: function(index, tile) {
+         this.world.tiles[index] = tile;
+         var x = index % this.world.width;
+         var y = Math.floor(index / this.world.width);
+
+         for (var i = x - 1; i <= x; i ++) {
+            for (var j = y - 1; j <= y; j ++) {
+               if (i < 0 || j < 0) continue;
+
+               TerrainHelper.draw(this.canvas.getContext('2d'),
+                                  i,
+                                  j,
+                                  this.world,
+                                  i,
+                                  j);
+            }
+         }
+      },
+
       updateTile: function(index, value) {
-         this.world.tiles[index] = value;
          this.setMinimapPixel(index, value);
-         this.updated = true;
+         this.setMapTile(index, value);
+      },
+
+      generateMap: function() {
+         this.canvas.width  = this.world.width * TerrainHelper.tilesize;
+         this.canvas.height = this.world.height * TerrainHelper.tilesize;
+         var context = this.canvas.getContext('2d');
+
+         for (var i = 0; i < this.world.width; i ++) {
+            for (var j = 0; j < this.world.height; j ++) {
+               TerrainHelper.draw(context,
+                                  i,
+                                  j,
+                                  this.world,
+                                  i,
+                                  j);
+            }
+         }
+
       },
 
       generateMinimap: function() {
@@ -83,8 +115,7 @@ define([
          var self = this;
          $.get('/api/world').then(function(world) {
             self.world = world;
-            window.world = world
-            self.updated = true;
+            self.generateMap();
 
             self.minimap.width = world.width;
             self.minimap.height = world.height;
@@ -101,44 +132,58 @@ define([
          if (!this.world)
             return;
 
-         var speed = 55;
+         var speed = 350;
          if (game.keyDown('LEFT')) {
             this.camera.x -= speed * dt;
-            this.updated = true;
          }
          if (game.keyDown('RIGHT')) {
             this.camera.x += speed * dt;
-            this.updated = true;
          }
          if (game.keyDown('UP')) {
             this.camera.y -= speed * dt;
-            this.updated = true;
          }
          if (game.keyDown('DOWN')) {
             this.camera.y += speed * dt;
-            this.updated = true;
          }
 
-         return true; // Don't rerender
+         this.ui.update(dt);
+      },
+
+      action: function(action) {
+         if (action !== 'none') {
+            var point = this.mainChar.position.mult(1 / TerrainHelper.tilesize);
+            var index = point.x + point.y * this.world.width;
+
+            this.connection.emit('action', index, action);
+         }
       },
 
       activate: function(point) {
          if (!this.world)
             return;
 
-         point.x = Math.floor(point.x / TerrainHelper.tilesize + this.camera.x + 0.5);
-         point.y = Math.floor(point.y / TerrainHelper.tilesize + this.camera.y + 0.5);
+         // Sandbox off by default
+         if (!window.SANDBOX) {
+            point.x = Math.floor(point.x / TerrainHelper.tilesize + this.camera.x / TerrainHelper.tilesize);// + 0.5);
+            point.y = Math.floor(point.y / TerrainHelper.tilesize + this.camera.y / TerrainHelper.tilesize);// + 0.5);
 
-         if (this.lastDrag && point.isEqual(this.lastDrag)) {
-            return;
+            this.mainChar.position = point.mult(TerrainHelper.tilesize);
          }
+         else {
+            point.x = Math.floor((point.x + this.camera.x) / TerrainHelper.tilesize + 0.5);
+            point.y = Math.floor((point.y + this.camera.y) / TerrainHelper.tilesize + 0.5);
 
-         var index = point.x + point.y * this.world.width;
-         // this.updateTile(index, (this.world.tiles[index] + 1) % 2);
-         this.lastDrag = point;
+            if (this.lastDrag && point.isEqual(this.lastDrag)) {
+               return;
+            }
 
-         if (this.ui.action !== 'none') {
-            this.connection.emit('activate', index, this.ui.action);
+            var index = point.x + point.y * this.world.width;
+            // this.updateTile(index, (this.world.tiles[index] + 1) % 2);
+            this.lastDrag = point;
+
+            if (this.ui.action !== 'none') {
+               this.connection.emit('action', index, this.ui.action);
+            }
          }
       },
 
@@ -146,7 +191,7 @@ define([
          var dir = Math.sign(e.wheelDelta);
          var horizontal = e.getModifierState('Shift');
 
-         var SCROLL_SLOW = 0.02;
+         var SCROLL_SLOW = 0.5;
 
          if (horizontal) {
             this.camera.x -= e.wheelDeltaY * SCROLL_SLOW;
@@ -156,7 +201,6 @@ define([
             this.camera.x -= e.wheelDeltaX * SCROLL_SLOW;
             this.camera.y -= e.wheelDeltaY * SCROLL_SLOW;
          }
-         this.updated = true;
       },
 
       dragstart: function(point) {
@@ -180,7 +224,6 @@ define([
       click: function(point) {
          if (point.x > this.ui.position.x) {
             this.ui.click(point);
-            this.updated = true;
 
             return;
          }
@@ -201,24 +244,17 @@ define([
             this.camera.x = 0;
          if (this.camera.y < 0)
             this.camera.y = 0;
-         if (this.camera.x + width / TerrainHelper.tilesize > this.world.width)
-            this.camera.x = this.world.width - width / TerrainHelper.tilesize;
-         if (this.camera.y + height / TerrainHelper.tilesize > this.world.height)
-            this.camera.y = this.world.height - height / TerrainHelper.tilesize;
+         if (this.camera.x + width > this.world.width * TerrainHelper.tilesize)
+            this.camera.x = this.world.width * TerrainHelper.tilesize - width;
+         if (this.camera.y + height > this.world.height * TerrainHelper.tilesize)
+            this.camera.y = this.world.height * TerrainHelper.tilesize - height;
 
-         var min_x = Math.floor(this.camera.x);
-         var min_y = Math.floor(this.camera.y);
-
-         for (var i = min_x; (i - min_x) * TerrainHelper.tilesize <= width + 3 /* ???? */; i ++) {
-            for (var j = min_y; (j - min_y) * TerrainHelper.tilesize <= height + 6 /* ???? */; j ++) {
-               TerrainHelper.draw(context,
-                                  i - this.camera.x,
-                                  j - this.camera.y,
-                                  this.world,
-                                  i,
-                                  j);
-            }
-         }
+         // Draw pre-rendered map
+         context.save();
+         context.translate(-this.camera.x, -this.camera.y);
+         context.drawImage(this.canvas, this.camera.x, this.camera.y, width, height, this.camera.x, this.camera.y, width, height);
+         this.mainChar.render(context);
+         context.restore();
 
          this.minimapFrame.position.x = width - this.minimapFrame.width;
          this.minimapFrame.render(context);
@@ -237,14 +273,13 @@ define([
             var viewport_w = scale * Math.floor(width / TerrainHelper.tilesize);
             var viewport_h = scale * Math.floor(height / TerrainHelper.tilesize);
             context.fillStyle = 'rgba(0, 0, 0, 0.3)';
-            context.fillRect(minimap_x + scale * this.camera.x, minimap_y + scale * this.camera.y, viewport_w, viewport_h);
+            context.fillRect(minimap_x + scale * this.camera.x / TerrainHelper.tilesize, minimap_y + scale * this.camera.y / TerrainHelper.tilesize, viewport_w, viewport_h);
          }
 
          this.ui.position.x = width - this.minimapFrame.width;
          this.ui.position.y = this.minimapFrame.height;
          this.ui.height = height - this.minimapFrame.height;
          this.ui.render(context);
-         this.mainChar.render(context);
       }
    })
 })

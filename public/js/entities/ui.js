@@ -10,7 +10,7 @@ define([
          this.getComponent('Box').fillStyle = 'rgba(0, 0, 0, 0.9)';
          this.width = this.height = 208;
 
-         this.action = 0;
+         this.action = 'none';
       },
 
       click: function(point) {

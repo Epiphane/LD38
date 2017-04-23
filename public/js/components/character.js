@@ -7,7 +7,7 @@ define([
 
       render: function(context) {
          context.fillStyle = 'blue';
-         context.fillRect(this.x, this.y, 10, 10);
+         context.fillRect(this.x, this.y, 32, 32);
       },
    });
 });

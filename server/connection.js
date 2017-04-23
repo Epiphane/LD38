@@ -10,7 +10,7 @@ module.exports = function(io, db) {
       this.game = null;
 
       socket.on('message', this.recv.bind(this));
-      socket.on('activate', this.activate.bind(this));
+      socket.on('action', this.action.bind(this));
       socket.on('remake', this.remake.bind(this));
    };
 
@@ -25,10 +25,10 @@ module.exports = function(io, db) {
       this.game.message(this, message);
    };
 
-   Connection.prototype.activate = function(index, action) {
+   Connection.prototype.action = function(index, action) {
       var socket = this.socket;
-      WorldController.activate(index, action).then((value) => {
-         io.emit('update', [index, value]);
+      WorldController.action(index, action).then((updates) => {
+         io.emit('updates', updates);
       })
    };
 
