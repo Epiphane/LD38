@@ -2,12 +2,14 @@ define([
    'constants/materials',
    'helpers/terrain',
    'entities/ui',
-   'entities/character'
+   'entities/character',
+   'helpers/math'
 ], function(
    MATERIALS,
    TerrainHelper,
    UI,
-   Character
+   Character,
+   MathUtil
 ) {
    return Juicy.State.extend({
       constructor: function(connection) {
@@ -15,6 +17,7 @@ define([
 
          this.world = null;
          this.lastDrag = null;
+         this.friends = {};
 
          var self = this;
          connection.on('connect', this.fetch.bind(this));
@@ -24,6 +27,16 @@ define([
             updates.forEach(function(info) {
                self.updateTile(info[0], info[1]);
             });
+         });
+
+         connection.on('player_pos_update', function(newPosition) {
+            var movingFriend = self.friends[newPosition.uuid];
+            if (!movingFriend) {
+               movingFriend = new Character(this);
+               self.friends[newPosition.uuid] = movingFriend;
+            }
+            movingFriend.getComponent('Character').walkToTile(newPosition.x, newPosition.y);
+            movingFriend.getComponent('Character').direction = newPosition.direction;
          });
 
          this.cooldown = 0.2;
@@ -40,7 +53,7 @@ define([
 
          this.ui = new UI(this);
          this.mainChar = new Character(this);
-         this.mainChar.setImage('./images/player.png');
+         this.mainChar.uuid = MathUtil.makeUuid();
 
          this.minimapFrame = new Juicy.Entity(this, ['Image']);
          this.minimapFrame.setImage('./images/frame.png');
@@ -146,20 +159,23 @@ define([
 
          if (!character.moving) {
             if (game.keyDown('LEFT')) {
-               character.move(-1, 0);
+               character.move(-1, 0, this.connection);
             }
             else if (game.keyDown('RIGHT')) {
-               character.move(1, 0);
+               character.move(1, 0, this.connection);
             }
             else if (game.keyDown('UP')) {
-               character.move(0, -1);
+               character.move(0, -1, this.connection);
             }
             else if (game.keyDown('DOWN')) {
-               character.move(0, 1);
+               character.move(0, 1, this.connection);
             }
          }
 
          this.mainChar.update();
+         for (var friendID in this.friends) {
+            this.friends[friendID].update();
+         }
          this.ticks ++;
 
          this.ui.update(dt);
@@ -276,6 +292,9 @@ define([
          context.drawImage(this.canvas, this.camera.x, this.camera.y, width, height, this.camera.x, this.camera.y, width, height);
          context.translate(-TerrainHelper.tilesize / 2, -TerrainHelper.tilesize / 2);
          this.mainChar.render(context);
+         for (var friendID in this.friends) {
+            this.friends[friendID].render(context);
+         }
          context.restore();
 
          this.minimapFrame.position.x = width - this.minimapFrame.width;

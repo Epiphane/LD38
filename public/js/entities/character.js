@@ -12,6 +12,7 @@ define([
          this.action = 0;
          this.getComponent('Image').TILE_WIDTH  = 32;
          this.getComponent('Image').TILE_HEIGHT = 32;
+         this.setImage('./images/player.png');
       },
    })
 })

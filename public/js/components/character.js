@@ -46,22 +46,35 @@ define([
          return 9 * this.direction;
       },
 
-      move: function(dx, dy) {
+      walkToTile(newTileX, newTileY) {
+         this.targetTileX = newTileX;
+         this.targetTileY = newTileY;
+         this.targetX = this.targetTileX * TerrainHelper.tilesize;
+         this.targetY = this.targetTileY * TerrainHelper.tilesize;
+         this.premoveX = this.entity.position.x;
+         this.premoveY = this.entity.position.y;
+
+         this.moving = true;
+         this.ticksMoved = 0;
+      },
+
+      move: function(dx, dy, conn) {
          if (this.moving === false) {
             if (dx ===  1) this.direction = 2;
             if (dx === -1) this.direction = 1;
             if (dy ===  1) this.direction = 0;
             if (dy === -1) this.direction = 3;
 
-            this.targetTileX = this.tileX + dx;
-            this.targetTileY = this.tileY + dy;
-            this.targetX = this.targetTileX * TerrainHelper.tilesize;
-            this.targetY = this.targetTileY * TerrainHelper.tilesize;
-            this.premoveX = this.entity.position.x;
-            this.premoveY = this.entity.position.y;
+            this.walkToTile(this.tileX + dx, this.tileY + dy);
 
-            this.moving = true;
-            this.ticksMoved = 0;
+            if (conn) {
+               conn.emit('player_pos', {
+                  x: this.targetTileX,
+                  y: this.targetTileY,
+                  direction: this.direction,
+                  uuid: this.uuid
+               });
+            }
          }
       },
 

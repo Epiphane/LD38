@@ -12,6 +12,7 @@ module.exports = function(io, db) {
       socket.on('message', this.recv.bind(this));
       socket.on('action', this.action.bind(this));
       socket.on('remake', this.remake.bind(this));
+      socket.on('player_pos', this.positionChanged.bind(this));
    };
 
    Connection.prototype.logout = function() {
@@ -23,6 +24,10 @@ module.exports = function(io, db) {
 
    Connection.prototype.recv = function(message) {
       this.game.message(this, message);
+   };
+
+   Connection.prototype.positionChanged = function(newPosition) {
+      this.socket.broadcast.emit('player_pos_update', newPosition)
    };
 
    Connection.prototype.action = function(index, action) {
