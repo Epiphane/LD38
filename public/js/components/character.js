@@ -72,7 +72,7 @@ define([
                   x: this.targetTileX,
                   y: this.targetTileY,
                   direction: this.direction,
-                  uuid: this.uuid
+                  uuid: this.entity.uuid
                });
             }
          }
