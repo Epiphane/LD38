@@ -199,12 +199,12 @@ define([
             point.x = Math.floor((point.x + this.camera.x) / TerrainHelper.tilesize + 0.5);
             point.y = Math.floor((point.y + this.camera.y) / TerrainHelper.tilesize + 0.5);
 
-            if (point.x === 0) point.x = 1;
-            if (point.y === 0) point.y = 1;
-            if (point.x === this.world.width) point.x = this.world.width - 1;
-            if (point.y === this.world.height) point.y = this.world.height - 1;
+            if (point.x <= 0) point.x = 1;
+            if (point.y <= 0) point.y = 1;
+            if (point.x >= this.world.width) point.x = this.world.width - 1;
+            if (point.y >= this.world.height) point.y = this.world.height - 1;
 
-            this.mainChar.position = point.mult(TerrainHelper.tilesize);
+            this.mainChar.mouseTarget = point;
          }
          else {
             point.x = Math.floor((point.x + this.camera.x) / TerrainHelper.tilesize + 0.5);
