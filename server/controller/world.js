@@ -108,7 +108,7 @@ WorldController.shore_up = function(world, index) {
 WorldController.plow_dirt = function(world, index) {
    WorldController.assert(world.tiles[index] === TILE.DIRT, 'plow_dirt must be on dirt');
 
-   return [WorldController.setTile(world, index, TILE.DIRT)];
+   return [WorldController.setTile(world, index, TILE.SOIL)];
 };
 
 WorldController.action = function(index, action) {
