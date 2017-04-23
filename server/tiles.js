@@ -6,5 +6,6 @@ module.exports = {
    SOIL: 4,
    STONE: 5,
    SOIL_WET: 6,
-   SNOW: 7
+   SNOW: 7,
+   ICE: 8
 };

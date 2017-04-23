@@ -155,6 +155,8 @@ define([
          point.x = Math.floor((point.x + this.camera.x) / TerrainHelper.tilesize + 0.5);
          point.y = Math.floor((point.y + this.camera.y) / TerrainHelper.tilesize + 0.5);
 
+         if (point.x < 0 || point.y < 0) return;
+
          // Sandbox off by default
          if (!this.sandbox) {
             if (point.x === 0) point.x = 1;
@@ -165,16 +167,20 @@ define([
             this.mainChar.position = point.mult(TerrainHelper.tilesize);
          }
          else {
-            if (this.lastDrag && point.isEqual(this.lastDrag)) {
-               return;
+            if (!this.lastDrag) {
+               this.lastDrag = point.add(new Juicy.Point(0, 1));
             }
 
-            var index = point.x + point.y * this.world.width;
-            // this.updateTile(index, (this.world.tiles[index] + 1) % 2);
-            this.lastDrag = point;
+            while (!this.lastDrag.isEqual(point)) {
+               var dist = point.sub(this.lastDrag);
+               this.lastDrag.x += Math.sign(dist.x);
+               this.lastDrag.y += Math.sign(dist.y);
 
-            if (this.ui.action !== 'none') {
-               this.doAction('place_' + this.ui.action, index);
+               var index = this.lastDrag.x + this.lastDrag.y * this.world.width;
+
+               if (this.ui.action !== 'none') {
+                  this.doAction('place_' + this.ui.action, index);
+               }
             }
          }
       },

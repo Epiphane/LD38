@@ -21,7 +21,7 @@
    /* ---------------------- Utility ------------------------ */
    var Point = Juicy.Point = function(x, y) {
       this.x = x = x || 0;
-      this.y = y || x;
+      this.y = arguments.length > 1 ? y : x;
    };
 
    Point.prototype.isEqual = function(other) {

@@ -10,16 +10,18 @@ module.exports = function(TILE, OCCUPANT) {
    RemakeWorld.remake = function(width, height) {
       var tiles = [];
       var occupants = [];
-      var simplex = new FastSimplexNoise({ frequency: 0.04, max: 1, min: -1, octaves: 8 });
+      var simplex = new FastSimplexNoise({ frequency: 0.01, max: 3, min: -1, octaves: 8 });
 
       for (var x = 0; x < width; x ++) {
          for (var y = 0; y < height; y ++) {
-            var tile = TILE.GRASS;
+            var tile = TILE.SNOW;
             var elevation = simplex.scaled2D(x, y);
 
-            if (elevation < 0.4)
-               tile = TILE.DIRT;
-            if (elevation < 0.2)
+            if (elevation < 1.5)
+               tile = TILE.STONE;
+            if (elevation < 0.9)
+               tile = TILE.GRASS;
+            if (elevation < 0.5)
                tile = TILE.SAND;
             if (elevation < 0)
                tile = TILE.WATER;

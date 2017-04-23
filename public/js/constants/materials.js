@@ -41,12 +41,17 @@ define([
          pixel: [255, 255, 255, 255]
       },
       STONE: {
-         offset_basic: [0, 11],
-         offset_above: [14, 8],
-         pixel: [100, 80, 18, 255]
+         offset_basic: [0, 13],
+         offset_above: [6, 12],
+         pixel: [128, 128, 128, 255]
+      },
+      ICE: {
+         offset_basic: [0, 14],
+         offset_above: [10, 12],
+         pixel: [176, 242, 255, 255]
       }
    };
-   var precedence = ['SNOW', 'STONE', 'GRASS', 'DIRT', 'SOIL', 'SOIL_WET', 'SAND', 'WATER'].reverse();
+   var precedence = ['ICE', 'SNOW', 'STONE', 'GRASS', 'DIRT', 'SOIL', 'SOIL_WET', 'SAND', 'WATER'].reverse();
 
    var MATERIALS = [];
    for (var key in TILE) {
