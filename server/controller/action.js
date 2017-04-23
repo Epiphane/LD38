@@ -6,10 +6,22 @@
 
    ActionController.init = function(TILE) {
 
+      ActionController.getTile = function(world, x, y) {
+         if (x < 0) x = 0;
+         if (y < 0) y = 0;
+         if (x >= world.width) x = world.width - 1;
+         if (y >= world.width) y = world.width - 1;
+
+         return world.tiles[x + y * world.width];
+      }
+
       ActionController.available = function(world, x, y, inventory) {
-         var index = x + y * world.width;
          var inventory = inventory;
-         var currentTile = world.tiles[index];
+         var currentTile = ActionController.getTile(world, x, y);
+         var above = ActionController.getTile(world, x, y - 1);
+         var below = ActionController.getTile(world, x, y + 1);
+         var left  = ActionController.getTile(world, x - 1, y);
+         var right = ActionController.getTile(world, x + 1, y);
 
          var actions = [];
          switch (currentTile) {
@@ -22,9 +34,15 @@
                                                       actions.push('water_soil');
             if (inventory.hasItem('seed_wheat'))    { actions.push('plant_wheat'); }
             if (inventory.hasItem('seed_sapling'))  { actions.push('plant_sapling'); }
+            break;
          case TILE.DIRT:
                                                       // actions.push('dig_dirt');
-            if (!currentTile === TILE.SOIL)         { actions.push('plow_dirt'); }
+            if (currentTile === TILE.DIRT) {
+               var acceptable = [TILE.SOIL, TILE.SOIL_WET, TILE.DIRT, TILE.GRASS];
+               if (acceptable.indexOf(above) >= 0 && acceptable.indexOf(below) >= 0 && acceptable.indexOf(left) >= 0 && acceptable.indexOf(right) >= 0) {
+                  actions.push('plow_dirt'); 
+               }
+            }
             break;
 
          case TILE.SAND:
@@ -77,6 +95,18 @@
          ActionController.assert(world.tiles[index] === TILE.DIRT, 'plow_dirt must be on dirt');
 
          return ActionController.setTile(world, index, TILE.SOIL);
+      };
+
+      ActionController.water_soil = function(world, index, inventory) {
+         ActionController.assert(world.tiles[index] === TILE.SOIL, 'water_soil must be on soil');
+
+         return ActionController.setTile(world, index, TILE.SOIL_WET);
+      };
+
+      ActionController.water_soil = function(world, index, inventory) {
+         ActionController.assert(world.tiles[index] === TILE.SOIL, 'water_soil must be on soil');
+
+         return ActionController.setTile(world, index, TILE.SOIL_WET);
       };
 
       ActionController.action = function(world, index, action, inventory) {

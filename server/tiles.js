@@ -4,5 +4,6 @@ module.exports = {
    SAND: 2,
    DIRT: 3,
    SOIL: 4,
-   STONE: 5
+   STONE: 5,
+   SOIL_WET: 6
 };
