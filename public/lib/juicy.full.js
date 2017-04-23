@@ -532,7 +532,7 @@
             if (!entity.width && !entity.height) {
                entity.width  = this.width;
                entity.height = this.height;
-               this.tileCols = this.width / this.TILE_WIDTH;
+               self.tileCols = this.width / self.TILE_WIDTH;
             }
 
             if (self._tint) {
@@ -592,7 +592,7 @@
          var drawnWidth  = this.TILE_WIDTH  || this.image.width;
          var drawnHeight = this.TILE_HEIGHT || this.image.height;
          var sheetX = (this.frame % this.tileCols) * this.TILE_WIDTH || 0;
-         var sheetY = (this.frame / this.tileCols) * this.TILE_HEIGHT || 0;
+         var sheetY = Math.floor(this.frame / this.tileCols) * this.TILE_HEIGHT || 0;
 
          context.drawImage(this.image, sheetX, sheetY,
              drawnWidth, drawnHeight, 0, 0, drawnWidth, drawnHeight);

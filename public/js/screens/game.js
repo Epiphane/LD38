@@ -104,24 +104,25 @@ define([
             return;
 
          var speed = 55;
-         if (game.keyDown('LEFT')) {
-            this.camera.x -= speed * dt;
-            this.updated = true;
-         }
-         if (game.keyDown('RIGHT')) {
-            this.camera.x += speed * dt;
-            this.updated = true;
-         }
-         if (game.keyDown('UP')) {
-            this.camera.y -= speed * dt;
-            this.updated = true;
-         }
-         if (game.keyDown('DOWN')) {
-            this.camera.y += speed * dt;
-            this.updated = true;
-         }
+         var character = this.mainChar.getComponent('Character');
+
+         // if (!character.isMoving()) {
+            if (game.keyDown('LEFT')) {
+               character.move(-1, 0);
+            }
+            else if (game.keyDown('RIGHT')) {
+               character.move(1, 0);
+            }
+            else if (game.keyDown('UP')) {
+               character.move(0, -1);
+            }
+            else if (game.keyDown('DOWN')) {
+               character.move(0, 1);
+            }
+         // }
 
          this.updated |= this.mainChar.update();
+         this.updated = true;
          this.ticks ++;
 
          return true; // Don't rerender

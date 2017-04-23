@@ -10,6 +10,8 @@ define([
 
       init: function() {
          this.action = 0;
+         this.getComponent('Image').TILE_WIDTH  = 32;
+         this.getComponent('Image').TILE_HEIGHT = 32;
       },
    })
 })
