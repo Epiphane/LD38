@@ -47,6 +47,9 @@ module.exports = function(io, db) {
       if (message === process.env.ELEVATED_SECRET) {
          this.elevated = true;
       }
+      else {
+         console.log('Rejecting secret ' + message);
+      }
       this.socket.emit('elevated', this.elevated);
    };
 
