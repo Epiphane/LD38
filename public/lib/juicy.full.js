@@ -116,6 +116,8 @@
    document.onkeyup = function(evt) {
       keyState[evt.keyCode] = false;
 
+      Game.trigger('keypress', evt);
+
       var method = 'key_' + CODES[evt.keyCode];
       if (Game_state && Game_state[method])
          Game_state[method](CODES[evt.keyCode]);

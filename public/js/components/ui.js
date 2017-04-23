@@ -54,16 +54,30 @@ define([
 
          var currentAction = this.entity.action;
          this.actions.forEach(function(action, index) {
+            context.font = '16px Pixellari, monospace';
+            context.fillText((index + 1) + '.', 7, (index + 1) * 50 - 6);
+
             context.fillStyle = currentAction === action.id ? 'red' : 'white';
 
             context.font = '32px Pixellari, monospace';
-            context.fillText(action.text, 60, (index + 1) * 50);
+            context.fillText(action.text, 70, (index + 1) * 50);
 
             var sx = action.icon[0] * TerrainHelper.tilesize;
             var sy = action.icon[1] * TerrainHelper.tilesize;
             context.drawImage(Icons, sx, sy, TerrainHelper.tilesize, TerrainHelper.tilesize,
-               20, index * 50 + 23, TerrainHelper.tilesize, TerrainHelper.tilesize);
+               30, index * 50 + 23, TerrainHelper.tilesize, TerrainHelper.tilesize);
          });
+      },
+
+      keypress: function(keyCode) {
+         // Clamp to 0-9
+         keyCode -= 48;
+         if (keyCode === 0) keyCode = 10;
+         keyCode --;
+
+         if (keyCode < this.actions.length) {
+            this.entity.state.action(this.actions[keyCode].id);
+         }
       },
 
       click: function(point) {
