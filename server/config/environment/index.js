@@ -27,7 +27,7 @@ var all = {
   // Root path of server
   root: path.normalize(__dirname + '/../../..'),
 
-  production_url: 'ld38.herokuapp.com',
+  production_url: 'http://ld38.herokuapp.com',
   production_port: 80,
 
   // Server port

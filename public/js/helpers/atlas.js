@@ -7,116 +7,6 @@ define([
 ) {
    var AtlasHelper = {};
 
-   var G = TILE.GRASS;
-   var W = TILE.WATER;
-   AtlasHelper.offsets = {};
-   var configs = {
-      GRASS_UI: { offset: [3, 0] },
-      WATER_UI: { offset: [3, 1] },
-      SAND_UI: { offset: [0, 2] },
-      DIRT_UI: { offset: [0, 4] },
-      GRASS: {
-         multiple: true,
-         offset: [[22, 3], [21, 5], [22, 5], [23, 5]],
-         tiles: [G, G, G, G]
-      },
-      WATER: {
-         offset: [[8, 14], [3, 14]],
-         tiles: [W, W, W, W]
-      },
-      GRASS_WATER_BR: {
-         offset: [6, 11],
-         tiles: [G, G, G, W]
-      },
-      GRASS_WATER_B:  {
-         offset: [7, 11],
-         tiles: [G, G, W, W]
-      },
-      GRASS_WATER_BL: {
-         offset: [8, 11],
-         tiles: [G, G, W, G]
-      },
-      GRASS_WATER_R:  {
-         offset: [6, 12],
-         tiles: [G, W, G, W]
-      },
-      GRASS_WATER_L:  {
-         offset: [8, 12],
-         tiles: [W, G, W, G]
-      },
-      GRASS_WATER_TR: {
-         offset: [6, 13],
-         tiles: [G, W, G, G]
-      },
-      GRASS_WATER_T:  {
-         offset: [7, 13],
-         tiles: [W, W, G, G]
-      },
-      GRASS_WATER_TL: {
-         offset: [8, 13],
-         tiles: [W, G, G, G]
-      },
-      WATER_GRASS_BR: {
-         offset: [7, 9],
-         tiles: [W, W, W, G]
-      },
-      WATER_GRASS_BL: {
-         offset: [8, 9],
-         tiles: [W, W, G, W]
-      },
-      WATER_GRASS_TR: {
-         offset: [7, 10],
-         tiles: [W, G, W, W]
-      },
-      WATER_GRASS_TL: {
-         offset: [8, 10],
-         tiles: [G, W, W, W]
-      },
-      GRASS_SPLIT_WATER_1: {
-         offset: [9, 7],
-         tiles: [G, W, W, G]
-      },
-      GRASS_SPLIT_WATER_2: {
-         offset: [9, 8],
-         tiles: [W, G, G, W]
-      }
-   };
-
-   // key specifies a "score": each byte is one of the tiles
-   // organized by top left, top right, bottom left, bottom right
-   var tileMap = window.tileMap = {};
-
-   AtlasHelper.getScore = function(tl, tr, bl, br) {
-      var score = 0;
-      score += tl; score <<= 8;
-      score += tr; score <<= 8;
-      score += bl; score <<= 8;
-      score += br;
-
-      return score;
-   };
-
-   AtlasHelper.registerTile = function(offset, tl, tr, bl, br) {
-      var score = AtlasHelper.getScore(tl, tr, bl, br);
-
-      tileMap[score] = offset;
-   };
-
-   AtlasHelper.getOffset = function(tl, tr, bl, br, i) {
-      var score = AtlasHelper.getScore(tl, tr, bl, br);
-      if (!tileMap[score]) {
-         //console.error('No offset found for:', tl, tr, bl, br);
-
-         return [1, 1];
-      }
-      var offset = tileMap[score];
-      if (typeof(offset[0]) !== 'number') {
-         i = i || 0;
-         offset = offset[i % offset.length];
-      }
-      return offset;
-   };
-
    /**
     * tiles is a number representing 4 pieces of info:
     *   0x1 means the top left is applicable
@@ -157,71 +47,104 @@ define([
     * AtlasHelper takes care of actually combining the images correctly
     */
     window.AtlasHelper = AtlasHelper
-   AtlasHelper.getOffsets = function(tl, tr, bl, br, i) {
-      var mTL = MATERIALS[tl],
-          mTR = MATERIALS[tr],
-          mBL = MATERIALS[bl],
-          mBR = MATERIALS[br];
-      var mats = [mTL, mTR, mBL, mBR];
+   AtlasHelper.getOffsets = function(tiles, elevations, i) {
+      var infos = tiles.map(function(tile, index) {
+         return { 
+            tile: tile,
+            mat: MATERIALS[tile], 
+            elevation: elevations[index] || 0,
+            grade: Math.floor((elevations[index] || 0) / (MATERIALS[tile].grade || 10)),
+            flag: 1 << index,
+            drawn: false
+         };
+      }).sort(function(a, b) { return 100 * (a.mat.height - b.mat.height) + a.elevation - b.elevation });
 
-      var baseOffset = [3, 3];
-      var baseHeight = 100;
-      var maxHeight = -100;
-      mats.forEach(function(mat) {
-         if (mat.height < baseHeight) { baseOffset = mat.offset_below; baseHeight = mat.height; }
-         if (mat.height > maxHeight) { maxHeight = mat.height; }
-      });
-
-      var baseHeight = Math.min(mTL.height, mTR.height, mBL.height, mBR.height);
-
-      var baseTiles  = 0;
-      mats.forEach(function(mat, i) { if (mat.height === baseHeight) { baseTiles += (1 << i); } });
-      var offset = Object.assign({}, baseOffset);
-      if (baseTiles === 0xF) {
-         Object.assign(offset, mTL.offset_basic);
-         offset[0] += i % 3;
+      var offsets = [];
+      var base    = infos[0];
+      var flags   = 0;
+      var index   = 0;
+      // infos.forEach(function(info) {
+      //    if (!info.drawn && 
+      //         info.mat.key === base.mat.key && 
+      //        (info.elevation < base.elevation + 10 || !!base.mat.stack)) {
+      //       flags += info.flag;
+      //       info.drawn = true;
+      //    }
+      // });
+      var step = 10;
+      while (index < infos.length && infos[index].mat.key === base.mat.key && infos[index].grade === base.grade) {
+         flags += infos[index].flag;
+         index ++;
+      }
+      if (base.mat.key === 'WATER' && flags !== 0xF) {
+         var offset = base.mat.offset_below;
+         var b_off = AtlasHelper.getOffsetFromApplicableTiles(flags, true /* inverse */);
+         offsets.push([offset[0] + b_off[0], offset[1] + b_off[1]]);
       }
       else {
-         var b_off = AtlasHelper.getOffsetFromApplicableTiles(baseTiles, true /* inverse */);
-         offset[0] += b_off[0];
-         offset[1] += b_off[1];
+         offsets.push([base.mat.offset_basic[0] + i % 3, base.mat.offset_basic[1]]);
       }
 
-      var offsets = [offset];
+      // return offsets;
 
-      while (++baseHeight <= maxHeight) {
-         var tiles    = 0;
-         var material = null;
-         mats.forEach(function(mat, i) { 
-            if (mat.height === baseHeight) { tiles += (1 << i); material = mat; } 
-         });
-
-         if (material) {
-            var off = AtlasHelper.getOffsetFromApplicableTiles(tiles);
-            off[0] += material.offset_above[0];
-            off[1] += material.offset_above[1];
-
-            offsets.push(off);
+      // Now do the rest (non-base)
+      while (index < infos.length) {
+         var tile  = infos[index];
+         var flags = 0;
+         while (index < infos.length && infos[index].mat.key === tile.mat.key && infos[index].grade === tile.grade) {
+            flags += infos[index].flag;
+            index ++;
          }
+
+         var off = AtlasHelper.getOffsetFromApplicableTiles(flags);
+         offsets.push([tile.mat.offset_above[0] + off[0], tile.mat.offset_above[1] + off[1]]);
       }
+
+      // var baseMaterial = null;
+      // var minHeight = 100;
+      // var maxHeight = 0;
+      // infos.forEach(function(info) {
+      //    if (info.elevation < minHeight) { minHeight = info.elevation; baseMaterial =  }
+      //    if (info.elevation > maxHeight) { maxHeight = info.elevation; }
+      // });
+
+      // var baseHeight = Math.min.apply(Math, mats);
+
+      // var baseTiles  = 0;
+      // mats.forEach(function(mat, i) { if (mat.height === baseHeight) { baseTiles += (1 << i); } });
+      // var offset = [];
+      // var candidate = mats.find((mat) => mat.height === baseHeight);
+      // if (baseTiles === 0xF || candidate.key !== 'WATER') {
+      //    Object.assign(offset, candidate.offset_basic);
+      //    offset[0] += i % 3;
+      // }
+      // else {
+      //    Object.assign(offset, candidate.offset_below);
+      //    var b_off = AtlasHelper.getOffsetFromApplicableTiles(baseTiles, true /* inverse */);
+      //    offset[0] += b_off[0];
+      //    offset[1] += b_off[1];
+      // }
+
+      // var offsets = [offset];
+
+      // while (++baseHeight <= maxHeight) {
+      //    var tiles    = 0;
+      //    var material = null;
+      //    mats.forEach(function(mat, i) { 
+      //       if (mat.height === baseHeight) { tiles += (1 << i); material = mat; } 
+      //    });
+
+      //    if (material) {
+      //       var off = AtlasHelper.getOffsetFromApplicableTiles(tiles);
+      //       off[0] += material.offset_above[0];
+      //       off[1] += material.offset_above[1];
+
+      //       offsets.push(off);
+      //    }
+      // }
 
       return offsets;
    };
-
-   for (var key in configs) {
-      if (!configs.hasOwnProperty(key)) {
-         continue;
-      }
-
-      var config = configs[key];
-      var tiles = config.tiles;
-      AtlasHelper.offsets[key] = config.offset;
-      if (!tiles) {
-         continue;
-      }
-
-      AtlasHelper.registerTile(config.offset, tiles[0], tiles[1], tiles[2], tiles[3]);
-   }
 
    return AtlasHelper;
 });

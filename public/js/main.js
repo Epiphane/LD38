@@ -29,18 +29,44 @@ require([
       D: 68,
    });
 
+   document.getElementById('game-canvas').getContext('2d').imageSmoothingEnabled = false;
+
    window.onmousewheel = function(e) {
       Juicy.Game.trigger('mousewheel', e);
-   }
+   };
 
    // On window resize, fill it with the game again!
    window.onresize = function() {
       Juicy.Game.resize();
    };
 
+   var Music = new buzz.sound("/audio/Sweden", {
+       formats: [ "mp3" ]
+   });
+
+   Music.play().loop();
+
+   window.muted = JSON.parse(localStorage.getItem('mute') || 'false');
+   if (muted) {
+      Music.mute();
+      $('#mute-link').text('unmute');
+   }
+   window.toggleMute = function() {
+      muted = !muted;
+      localStorage.setItem('mute', muted);
+
+      if (muted) {
+         Music.mute();
+         $('#mute-link').text('unmute');
+      }
+      else {
+         Music.unmute();
+         $('#mute-link').text('mute');
+      }
+   }
+
    // Initialize connection to server
    var connection = new ConnectionManager();
-   var content = new ContentManager($('#content'));
 
    var disconnect = $('#disconnect');
    connection.on('disconnect', function() {
@@ -48,14 +74,6 @@ require([
    });
    connection.on('reconnect', function() {
       disconnect.hide();
-   });
-
-   connection.on('update', function(updates) {
-      content.onUpdate(updates);
-   });
-
-   connection.on('players', function(players) {
-      // console.log(players);
    });
 
    Juicy.Game.setState(new GameScreen(connection)).run();

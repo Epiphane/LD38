@@ -1,7 +1,7 @@
 <html>
 <head>
 	<title>Ludum Dare 38</title>
-  <script type="text/javascript" src="lib/jquery-2.1.1.min.js"></script>
+  <script type="text/javascript" src="lib/jquery-3.1.0.min.js"></script>
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
@@ -12,8 +12,8 @@
     </div>
   </div>
 
-  <div class="overlay top-right" style="display: none">
-    <h2 style="text-align: center">press space dude</h2>
+  <div class="overlay top-left">
+    <h2><a id="mute-link" onclick="toggleMute()" style="cursor: pointer">mute</a></h2>
   </div>
 
   <canvas id="game-canvas"></canvas>

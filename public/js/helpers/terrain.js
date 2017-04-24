@@ -39,10 +39,10 @@ define([
    };
 
    TerrainHelper.terrainAt = function(world, x, y) {
-      if (x < 0) x = 0;
-      if (y < 0) y = 0;
-      if (x >= world.width) x = world.width - 1;
-      if (y >= world.height) y = world.height - 1;
+      if (x < 0) return TILE.WATER;//x = 0;
+      if (y < 0) return TILE.WATER;//y = 0;
+      if (x >= world.width) return TILE.WATER;//x = world.width - 1;
+      if (y >= world.height) return TILE.WATER;//y = world.height - 1;
 
       return world.tiles[x + y * world.width];
    };
@@ -60,18 +60,24 @@ define([
                         tile_size);
    };
 
-   TerrainHelper.draw = function(context, dx, dy, world, x, y) {
+   TerrainHelper.draw = function(context, world, x, y) {
       var tiles = [
          TerrainHelper.terrainAt(world, x,   y),
          TerrainHelper.terrainAt(world, x+1, y),
          TerrainHelper.terrainAt(world, x,   y+1),
          TerrainHelper.terrainAt(world, x+1, y+1)
       ];
-      var offsets = Atlas.getOffsets(tiles[0], tiles[1], tiles[2], tiles[3], x ^ y);
+      var elevations = [
+         world.getElevation(x,   y),
+         world.getElevation(x+1, y),
+         world.getElevation(x,   y+1),
+         world.getElevation(x+1, y+1)
+      ];
+      var offsets = Atlas.getOffsets(tiles, elevations, x ^ y);
 
       var tile_size = TerrainHelper.tilesize;
       offsets.forEach(function(offset) {
-         TerrainHelper.drawOffset(context, Math.floor(dx * tile_size), Math.floor(dy * tile_size), offset);
+         TerrainHelper.drawOffset(context, x * tile_size, y * tile_size, offset);
       });
    };
 

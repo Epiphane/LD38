@@ -38,11 +38,12 @@ define([
    ConnectionManager.prototype.onOnce = function(event, callback) {
       var self = this;
       
-      this.callbacks[event] = function() {
-         self.off(event);
+      this.socket.once(event, callback);
+      // this.callbacks[event] = function() {
+      //    self.off(event);
 
-         callback.apply(self, arguments);
-      }
+      //    callback.apply(self, arguments);
+      // }
    };
 
    return ConnectionManager;

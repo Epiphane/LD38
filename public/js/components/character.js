@@ -1,9 +1,13 @@
 define([
+   'constants/materials',
    'components/sprite',
+   'helpers/occupant',
    'helpers/terrain',
    'helpers/math'
 ], function(
+   MATERIALS,
    SpriteComponent,
+   OccupantHelper,
    TerrainHelper,
    MathUtil
 ) {
@@ -28,7 +32,7 @@ define([
       mouseTarget: null,
 
       // How many ticks it takes to go from one tile to the next
-      ticksPerMovement: 7,
+      ticksPerMovement: 14,
       ticksMoved: 0,
 
       isMoving: function() {
@@ -47,7 +51,24 @@ define([
          return 9 * this.direction;
       },
 
-      walkToTile(newTileX, newTileY) {
+      sendPosition: function(conn) {
+         localStorage.setItem('spawn', JSON.stringify([this.targetTileX, this.targetTileY]));
+         if (conn) {
+            conn.emit('player_pos', {
+               x: this.targetTileX,
+               y: this.targetTileY,
+               direction: this.direction,
+               uuid: this.entity.uuid
+            });
+         }
+      },
+
+      walkToTile: function(world, newTileX, newTileY) {
+         if (newTileX < 0) newTileX = 0;
+         if (newTileY < 0) newTileY = 0;
+         if (newTileX >= world.width) newTileX = world.width - 1;
+         if (newTileY >= world.height) newTileY = world.height - 1;
+
          this.targetTileX = newTileX;
          this.targetTileY = newTileY;
          this.targetX = this.targetTileX * TerrainHelper.tilesize;
@@ -59,7 +80,7 @@ define([
          this.ticksMoved = 0;
       },
 
-      move: function(dx, dy, conn) {
+      move: function(world, dx, dy, conn) {
          // Cancel mouse movement
          this.mouseTarget = null;
 
@@ -69,15 +90,25 @@ define([
             if (dy ===  1) this.direction = 0;
             if (dy === -1) this.direction = 3;
 
-            this.walkToTile(this.tileX + dx, this.tileY + dy);
+            if (!OccupantHelper.isBlocked(world, this.tileX + dx, this.tileY + dy) &&
+                (dx === 0 || dy === 0 ||
+                !OccupantHelper.isBlocked(world, this.tileX, this.tileY + dy) ||
+                !OccupantHelper.isBlocked(world, this.tileX + dx, this.tileY))) {
+               this.walkToTile(world, this.tileX + dx, this.tileY + dy);
 
-            if (conn) {
-               conn.emit('player_pos', {
-                  x: this.targetTileX,
-                  y: this.targetTileY,
-                  direction: this.direction,
-                  uuid: this.entity.uuid
-               });
+               this.sendPosition(conn);
+            }
+            // Try moving just up
+            else if (dx !== 0 && dy !== 0 && !OccupantHelper.isBlocked(world, this.tileX, this.tileY + dy)) {
+               this.walkToTile(world, this.tileX, this.tileY + dy);
+
+               this.sendPosition(conn);
+            }
+            // or left
+            else if (dx !== 0 && dy !== 0 && !OccupantHelper.isBlocked(world, this.tileX + dx, this.tileY)) {
+               this.walkToTile(world, this.tileX + dx, this.tileY);
+
+               this.sendPosition(conn);
             }
          }
       },
@@ -131,9 +162,32 @@ define([
                this.tileX = this.targetTileX;
                this.tileY = this.targetTileY;
             }
+
+         }
+         else {
+            this.entity.position.x = this.tileX * TerrainHelper.tilesize;
+            this.entity.position.y = this.tileY * TerrainHelper.tilesize;
          }
 
          this.entity.getComponent('Image').frame += this.getDirectionFrame();
+
+         var world = this.entity.state.world;
+         var tileX = Math.round(this.entity.position.x / TerrainHelper.tilesize);
+         var tileY = Math.round(this.entity.position.y / TerrainHelper.tilesize);
+         world.getComponent('WorldMap').updateOccupants(world, tileX + tileY * world.width);
       },
+
+      render: function(context) {
+         if (this.entity.state.world.ready) {
+            var tileX = Math.round(this.entity.position.x / TerrainHelper.tilesize);
+            var tileY = Math.round(this.entity.position.y / TerrainHelper.tilesize);
+
+            var tile = this.entity.state.world.getTile(tileX, tileY);
+            var material = MATERIALS[tile];
+            var elevation = this.entity.state.world.getElevation(tileX, tileY) / 10;
+                elevation += material.height;
+            context.translate(0, Math.floor(-elevation));
+         }
+      }
    });
 });
