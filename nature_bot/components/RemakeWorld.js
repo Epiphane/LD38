@@ -26,50 +26,11 @@ module.exports = function(TILE, OCCUPANT) {
       return '[' + this.x + ',' + this.y + ']: ' + this.tile + ' ' + this.elevation + 'ft';
    }
 
-   // var Corner = function(x, y, elevation) {
-   //    this.x = x;
-   //    this.y = y;
-   //    this.elevation = elevation.scaled2D(x, y);
-   // };
-
    var Map = function(width, height) {
       var self = this;
 
       this.width  = width;
       this.height = height;
-
-      // var elevation = new FastSimplexNoise({ frequency: 0.05, max: 1, min: 0, octaves: 8 });
-
-      // Classic overengineering tbh
-      // this.corners = [];
-      // var corners = [];
-      // for (var j = 0; j <= height; j ++) {
-      //    var row = [];
-      //    for (var i = 0; i <= width; i ++) {
-      //       var element = new Corner(i, j, elevation);
-
-      //       corners.push(element);
-      //       row.push(element);
-      //    }
-      //    this.corners.push(row);
-      // }
-
-      // corners.sort((a, b) => a.elevation - b.elevation);
-      // corners.forEach((element, index) => {
-      //    element.elevation = 1 - Math.sqrt(1 - index / corners.length);
-      // });
-
-      // // Compute which direction water flows
-      // this.corners.forEach((corner, x, y) => {
-      //    corner.neighbors = [
-      //       self.getCorner(corner.x - 1, corner.y),
-      //       self.getCorner(corner.x + 1, corner.y),
-      //       self.getCorner(corner.x, corner.y - 1),
-      //       self.getCorner(corner.x, corner.y + 1)
-      //    ].filter((cell) => !!cell); // Kick out nulls
-
-      //    var minHeight = 
-      // });
 
       for (var j = 0; j < height; j ++) {
          var row = [];
@@ -110,22 +71,6 @@ module.exports = function(TILE, OCCUPANT) {
       return this.cells().map((cell) => cell.occupant);
    };
 
-   // Map.prototype.getCorners = function(x, y) {
-   //    return [
-   //       this.corners[x    ][y    ],
-   //       this.corners[x + 1][y    ],
-   //       this.corners[x    ][y + 1],
-   //       this.corners[x + 1][y + 1]
-   //    ]
-   // };
-
-   // Map.prototype.getCorner = function(x, y) {
-   //    if (x < 0 || y < 0 || x >= this.width || y >= this.height)
-   //       return null;
-
-   //    return this.corners[y][x];
-   // };
-
    Map.prototype.get = function(x, y) {
       if (x < 0 || y < 0 || x >= this.width || y >= this.height)
          return null;
@@ -145,22 +90,22 @@ module.exports = function(TILE, OCCUPANT) {
       {
          water: { frequency: 0.03, max: 1, min: 0, octaves: 8 },
          water_pow: 5,
-         moisture: 1
-      },
-      {
-         water: { frequency: 0.08, max: 1, min: 0, octaves: 8 },
-         water_pow: 4,
-         moisture: 2
+         moisture: 4
       },
       {
          water: { frequency: 0.02, max: 1, min: 0, octaves: 8 },
          water_pow: 4,
-         moisture: 3
+         moisture: 2
       },
       {
-         water: { frequency: 0.06, max: 1, min: 0, octaves: 8 },
+         water: { frequency: 0.04, max: 1, min: 0, octaves: 8 },
          water_pow: 4,
-         moisture: 2
+         moisture: 1
+      },
+      {
+         water: { frequency: 0.02, max: 1, min: 0, octaves: 8 },
+         water_pow: 4,
+         moisture: 4
       },
    ];
 
@@ -174,11 +119,13 @@ module.exports = function(TILE, OCCUPANT) {
       } else if (cell.coast) {
          return 'BEACH';
       } else if (cell.elevation > 0.8) {
+         return 'SNOW';
          if (cell.moisture > 0.50) return 'SNOW';
          else if (cell.moisture > 0.33) return 'TUNDRA';
          else if (cell.moisture > 0.16) return 'BARE';
          else return 'SCORCHED';
       } else if (cell.elevation > 0.6) {
+         return 'BARE';
          if (cell.moisture > 0.66) return 'TAIGA';
          else if (cell.moisture > 0.33) return 'SHRUBLAND';
          else return 'TEMPERATE_DESERT';
@@ -222,8 +169,9 @@ module.exports = function(TILE, OCCUPANT) {
 
       // Don't use a real timestamp cause seed is stored as an int lul
       var seed = new Date().getTime() % 5000;//Math.random();
-      Math.seedrandom(4205);
       Math.seedrandom(seed);
+      // Math.seedrandom(4205);
+      // Math.seedrandom(396);
 
       var tiles = [];
       var occupants = [];
@@ -238,6 +186,8 @@ module.exports = function(TILE, OCCUPANT) {
       for (var i = 0; i < sections; i ++)
          waterNoise.push(new FastSimplexNoise(RemakeWorld.sections[i].water));
 
+      var waterNoiseAll = new FastSimplexNoise({ frequency: 0.03, max: 1, min: 0, octaves: 8 });
+
       // Define a coastline
       map.forEachCell((cell, x, y) => {
          cell.local_x = x % section_width;
@@ -249,13 +199,18 @@ module.exports = function(TILE, OCCUPANT) {
             x: 2 * (cell.local_x - section_width  / 2) / section_width,
             y: 2 * (cell.local_y - section_height / 2) / section_height
          };
+         cell.total_dist = Math.sqrt(
+            4 * (cell.x / map.width  - 0.5) * (cell.x / map.width  - 0.5) +
+            4 * (cell.y / map.height - 0.5) * (cell.y / map.height - 0.5));
          cell.center_vector.length = Math.sqrt(
             cell.center_vector.x * cell.center_vector.x +
             cell.center_vector.y * cell.center_vector.y);
 
          var water = waterNoise[cell.section].scaled2D(x, y);
+         var waterAll = waterNoiseAll.scaled2D(x, y);
 
-         cell.water = !(water > 0.3 + 0.4 * Math.pow(cell.center_vector.length, RemakeWorld.sections[cell.section].water_pow));
+         cell.water = !((water > 0.3 + 0.4 * Math.pow(cell.center_vector.length, RemakeWorld.sections[cell.section].water_pow))
+            || (water > 0.3 + 0.4 * Math.pow(cell.total_dist, 2)));
          if (x === 0 || y === 0 || x === width - 1 || y === height - 1)
             cell.water = true;
 
@@ -338,15 +293,7 @@ module.exports = function(TILE, OCCUPANT) {
          });
       });
 
-      var oceanLevel = 0;
-      var proportion = cells.length;
-      map.forEachCell((cell) => {
-         if (cell.ocean) {
-            oceanLevel = Math.max(cell.elevation, oceanLevel);
-            proportion --;
-         }
-      })
-
+      var proportion = Math.floor(cells.length / 2);
       // Create a few river
       for (var i = 0; i < 8; i ++) {
          var start = Math.floor(Math.random() * proportion);
@@ -357,10 +304,6 @@ module.exports = function(TILE, OCCUPANT) {
                riverhead.diagonalNeighbor.water = true;
 
             riverhead = riverhead.lowestNeighbor;
-            if (riverhead === riverhead.lowestNeighbor) {
-               console.log('ded')
-               riverhead.ocean = true;
-            }
          }
       }
 
@@ -394,10 +337,14 @@ module.exports = function(TILE, OCCUPANT) {
       map.forEachCell((cell) => cell.biome = RemakeWorld.getBiome(cell));
       map.forEachCell((cell) => cell.tile = RemakeWorld.getTile(cell));
 
+      var cells = map.cells();
+
       return {
          seed: seed,
-         tiles: map.tiles(),
-         occupants: map.occupants()
+         tiles: cells.map((cell) => cell.tile),
+         elevation: cells.map((cell) => cell.elevation),
+         moisture: cells.map((cell) => cell.moisture),
+         occupants: cells.map((cell) => cell.occupants)
       };
    }
 

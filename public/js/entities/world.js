@@ -35,6 +35,10 @@ define([
          });
       },
 
+      getTile: function(x, y) {
+         return this.tiles[x + y * this.width];
+      },
+
       set: function(properties) {
          Object.assign(this, properties);
 

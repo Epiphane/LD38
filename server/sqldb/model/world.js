@@ -10,6 +10,8 @@ module.exports = function(sequelize, DataTypes) {
         seed: DataTypes.INTEGER,
         tiles: DataTypes.ARRAY(DataTypes.INTEGER),
         occupants: DataTypes.ARRAY(DataTypes.INTEGER),
+        elevation: DataTypes.ARRAY(DataTypes.INTEGER),
+        moisture: DataTypes.ARRAY(DataTypes.INTEGER),
         width: {
             type: DataTypes.INTEGER,
             defaultValue: 100

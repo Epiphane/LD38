@@ -70,7 +70,38 @@ define([
          var self = this;
          $.get('/api/world').then(function(world) {
             self.world.set(world);
+
+            self.placeMainChar();
          });
+      },
+
+      placeMainChar: function() {
+         var character = this.mainChar.getComponent('Character');
+
+         var spawn = JSON.parse(localStorage.getItem('spawn') || 'null');
+         if (!spawn) {
+            var rando = Math.random();
+            if (rando < 0.25) {
+               spawn = [this.world.width / 4, this.world.height / 4];
+            }
+            else if (rando < 0.5) {
+               spawn = [this.world.width * 3 / 4, this.world.height / 4];
+            }
+            else if (rando < 0.75) {
+               spawn = [this.world.width / 4, this.world.height * 3 / 4];
+            }
+            else {
+               spawn = [this.world.width * 3 / 4, this.world.height * 3 / 4];
+            }
+         }
+
+         character.tileX = Math.floor(spawn[0]);
+         character.tileY = Math.floor(spawn[1]);
+         this.mainChar.position.x = character.tileX * TerrainHelper.tilesize;
+         this.mainChar.position.y = character.tileY * TerrainHelper.tilesize;
+
+         this.camera.x = this.mainChar.position.x;
+         this.camera.y = this.mainChar.position.y;
       },
 
       key_SPACE: function() {
@@ -92,21 +123,37 @@ define([
          var character = this.mainChar.getComponent('Character');
 
          if (!character.moving) {
+            var dx = 0, dy = 0;
+
             if (game.keyDown('LEFT')) {
-               character.move(-1, 0, this.connection);
+               dx --;
             }
-            else if (game.keyDown('RIGHT')) {
-               character.move(1, 0, this.connection);
+            if (game.keyDown('RIGHT')) {
+               dx ++
             }
-            else if (game.keyDown('UP')) {
-               character.move(0, -1, this.connection);
+            if (game.keyDown('UP')) {
+               dy --;
             }
-            else if (game.keyDown('DOWN')) {
-               character.move(0, 1, this.connection);
+            if (game.keyDown('DOWN')) {
+               dy ++;
+            }
+
+            if (dx !== 0 || dy !== 0) {
+               character.move(this.world, dx, dy, this.connection);
             }
          }
 
          this.mainChar.update();
+         var LEEWAY = 4 * TerrainHelper.tilesize;
+         if (this.mainChar.position.x < this.camera.x - LEEWAY)
+            this.camera.x = this.mainChar.position.x + LEEWAY;
+         if (this.mainChar.position.x > this.camera.x + LEEWAY)
+            this.camera.x = this.mainChar.position.x - LEEWAY;
+         if (this.mainChar.position.y < this.camera.y - LEEWAY)
+            this.camera.y = this.mainChar.position.y + LEEWAY;
+         if (this.mainChar.position.y > this.camera.y + LEEWAY)
+            this.camera.y = this.mainChar.position.y - LEEWAY;
+
          for (var friendID in this.friends) {
             this.friends[friendID].update();
          }
@@ -166,6 +213,7 @@ define([
 
          // Sandbox off by default
          if (!this.sandbox) {
+            return;
             if (point.x === 0) point.x = 1;
             if (point.y === 0) point.y = 1;
             if (point.x === this.world.width) point.x = this.world.width - 1;
@@ -242,39 +290,32 @@ define([
             return;
          }
 
-         if (this.camera.x < 0)
-            this.camera.x = 0;
-         if (this.camera.y < 0)
-            this.camera.y = 0;
-         if (this.camera.x + width > this.world.width * TerrainHelper.tilesize)
-            this.camera.x = this.world.width * TerrainHelper.tilesize - width;
-         if (this.camera.y + height > this.world.height * TerrainHelper.tilesize)
-            this.camera.y = this.world.height * TerrainHelper.tilesize - height;
+         if (this.camera.x - width / 2 < 0)
+            this.camera.x = width / 2;
+         if (this.camera.y - height / 2 < 0)
+            this.camera.y = height / 2;
+         if (this.camera.x + width / 2 > this.world.width * TerrainHelper.tilesize)
+            this.camera.x = this.world.width * TerrainHelper.tilesize - width / 2;
+         if (this.camera.y + height / 2 > this.world.height * TerrainHelper.tilesize)
+            this.camera.y = this.world.height * TerrainHelper.tilesize - height / 2;
 
          // Draw pre-rendered map
+         context.save();
          if (this.holistic) {
-            context.save();
             this.mapScale = height / (this.world.height * TerrainHelper.tilesize);
             context.scale(this.mapScale, this.mapScale);
             this.world.render(context, 0, 0, this.world.width * TerrainHelper.tilesize, this.world.height * TerrainHelper.tilesize);
-            context.translate(-TerrainHelper.tilesize / 2, -TerrainHelper.tilesize / 2);
-            this.mainChar.render(context);
-            for (var friendID in this.friends) {
-               this.friends[friendID].render(context);
-            }
-            context.restore();
          }
          else {
-            context.save();
-            context.translate(-this.camera.x, -this.camera.y);
-            this.world.render(context, this.camera.x, this.camera.y, width, height);
-            context.translate(-TerrainHelper.tilesize / 2, -TerrainHelper.tilesize / 2);
-            this.mainChar.render(context);
-            for (var friendID in this.friends) {
-               this.friends[friendID].render(context);
-            }
-            context.restore();
+            context.translate(-this.camera.x + width / 2, -this.camera.y + height / 2);
+            this.world.render(context, this.camera.x - width / 2, this.camera.y - height / 2, width, height);
          }
+         context.translate(-TerrainHelper.tilesize / 2, -TerrainHelper.tilesize / 2);
+         this.mainChar.render(context);
+         for (var friendID in this.friends) {
+            this.friends[friendID].render(context);
+         }
+         context.restore();
 
          // Minimap frame
          this.minimapFrame.position.x = width - this.minimapFrame.width;
@@ -293,8 +334,8 @@ define([
             context.fillRect(0, 0, this.world.width, this.world.height);
             
             this.minimap.render(context, 
-               this.camera.x / TerrainHelper.tilesize, 
-               this.camera.y / TerrainHelper.tilesize, 
+               (this.camera.x - width / 2) / TerrainHelper.tilesize, 
+               (this.camera.y - height / 2) / TerrainHelper.tilesize, 
                Math.floor(width / TerrainHelper.tilesize), 
                Math.floor(height / TerrainHelper.tilesize));
 

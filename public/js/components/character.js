@@ -1,8 +1,10 @@
 define([
+   'constants/materials',
    'components/sprite',
    'helpers/terrain',
    'helpers/math'
 ], function(
+   MATERIALS,
    SpriteComponent,
    TerrainHelper,
    MathUtil
@@ -27,7 +29,7 @@ define([
       moving: false,
 
       // How many ticks it takes to go from one tile to the next
-      ticksPerMovement: 7,
+      ticksPerMovement: 14,
       ticksMoved: 0,
 
       isMoving: function() {
@@ -46,7 +48,12 @@ define([
          return 9 * this.direction;
       },
 
-      walkToTile(newTileX, newTileY) {
+      walkToTile: function(world, newTileX, newTileY) {
+         if (newTileX < 0) newTileX = 0;
+         if (newTileY < 0) newTileY = 0;
+         if (newTileX >= world.width) newTileX = world.width - 1;
+         if (newTileY >= world.height) newTileY = world.height - 1;
+
          this.targetTileX = newTileX;
          this.targetTileY = newTileY;
          this.targetX = this.targetTileX * TerrainHelper.tilesize;
@@ -58,14 +65,14 @@ define([
          this.ticksMoved = 0;
       },
 
-      move: function(dx, dy, conn) {
+      move: function(world, dx, dy, conn) {
          if (this.moving === false) {
             if (dx ===  1) this.direction = 2;
             if (dx === -1) this.direction = 1;
             if (dy ===  1) this.direction = 0;
             if (dy === -1) this.direction = 3;
 
-            this.walkToTile(this.tileX + dx, this.tileY + dy);
+            this.walkToTile(world, this.tileX + dx, this.tileY + dy);
 
             if (conn) {
                conn.emit('player_pos', {
@@ -111,8 +118,23 @@ define([
                this.tileY = this.targetTileY;
             }
          }
+         else {
+            this.entity.position.x = this.tileX * TerrainHelper.tilesize;
+            this.entity.position.y = this.tileY * TerrainHelper.tilesize;
+         }
 
          this.entity.getComponent('Image').frame += this.getDirectionFrame();
       },
+
+      render: function(context) {
+         if (this.entity.state.world.ready) {
+            var tileX = Math.round(this.entity.position.x / TerrainHelper.tilesize);
+            var tileY = Math.round(this.entity.position.y / TerrainHelper.tilesize);
+
+            var tile = this.entity.state.world.getTile(tileX, tileY);
+            var material = MATERIALS[tile];
+            context.translate(0, -2 * material.height);
+         }
+      }
    });
 });
