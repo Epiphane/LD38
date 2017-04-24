@@ -342,9 +342,9 @@ module.exports = function(TILE, OCCUPANT) {
       return {
          seed: seed,
          tiles: cells.map((cell) => cell.tile),
-         elevation: cells.map((cell) => cell.elevation),
-         moisture: cells.map((cell) => cell.moisture),
-         occupants: cells.map((cell) => cell.occupants)
+         elevation: cells.map((cell) => cell.elevation.toFixed(2)),
+         moisture: cells.map((cell) => cell.moisture.toFixed(2)),
+         occupants: cells.map((cell) => cell.occupant)
       };
    }
 
