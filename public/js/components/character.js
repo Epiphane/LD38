@@ -138,7 +138,7 @@ define([
 
             var tile = this.entity.state.world.getTile(tileX, tileY);
             var material = MATERIALS[tile];
-            context.translate(0, -2 * material.height);
+            context.translate(0, Math.floor(-1.5 * (material.height - MATERIALS.length / 2)));
          }
       }
    });
