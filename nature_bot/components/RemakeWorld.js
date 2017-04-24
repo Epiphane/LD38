@@ -342,8 +342,8 @@ module.exports = function(TILE, OCCUPANT) {
       return {
          seed: seed,
          tiles: cells.map((cell) => cell.tile),
-         elevation: cells.map((cell) => cell.elevation.toFixed(2)),
-         moisture: cells.map((cell) => cell.moisture.toFixed(2)),
+         elevation: cells.map((cell) => Math.floor(cell.elevation * 100)),
+         moisture: cells.map((cell) => Math.floor(cell.moisture * 100)),
          occupants: cells.map((cell) => cell.occupant)
       };
    }
