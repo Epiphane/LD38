@@ -9,7 +9,7 @@ var NatureBot = function(domain, socket, config) {
    this.running = false;
    this.socket  = socket;
    this.world   = new World(domain);
-   this.players = {};
+   this.friends = {};
    this.ticks   = 0;
 
    this.components = config.components.map((info) => {
