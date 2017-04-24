@@ -47,6 +47,10 @@ define([
             movingFriend.getComponent('Character').direction = newPosition.direction;
          });
 
+         connection.on('player_leave', function(uuid) {
+            delete self.friends[uuid];
+         });
+
          this.cooldown = 0.2;
          this.timer = 0;
          this.ticks = 0;

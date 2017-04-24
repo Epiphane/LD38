@@ -450,7 +450,7 @@ module.exports = function(TILE, OCCUPANT, MATERIAL) {
       });
    };
 
-   RemakeWorld.prototype.tick = function() {};
+   RemakeWorld.prototype.tick = function(world, players) {};
 
    return RemakeWorld;
 }

@@ -46,3 +46,11 @@ socket.on('updates', function(updates) {
    log.verbose('Received updates: ' + JSON.stringify(updates));
    bot.update(updates);
 });
+
+socket.on('player_pos_update', function(newPosition) {
+   bot.updatePlayerPos(newPosition);
+});
+
+socket.on('player_leave', function(uuid) {
+   bot.deletePlayer(uuid);
+});

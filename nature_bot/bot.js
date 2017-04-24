@@ -9,6 +9,7 @@ var NatureBot = function(domain, socket, config) {
    this.running = false;
    this.socket  = socket;
    this.world   = new World(domain);
+   this.players = {};
    this.ticks   = 0;
 
    this.components = config.components.map((info) => {
@@ -23,6 +24,20 @@ var NatureBot = function(domain, socket, config) {
       component.name = name;
       return component;
    });
+};
+
+NatureBot.prototype.updatePlayerPos = function(position) {
+   var friend = this.friends[position.uuid];
+   if (!friend) {
+      friend = { x: position.x, y: position.y };
+      this.friends[position.uuid] = friend;
+   }
+   friend.x = position.x;
+   friend.y = position.y;
+};
+
+NatureBot.prototype.deletePlayer = function(uuid) {
+   delete this.friends[uuid];
 };
 
 NatureBot.prototype.start = function() {
@@ -61,8 +76,9 @@ NatureBot.prototype.tick = function() {
    }
 
    var world  = this.world;
+   var friends  = this.friends;
    var socket = this.socket;
-   Promise.all(this.components.map((component) => component.tick(world))).then((updates) => {
+   Promise.all(this.components.map((component) => component.tick(world, friends))).then((updates) => {
       return updates.map((update) => {
          if (update instanceof Update) {
             return [update];

@@ -36,10 +36,14 @@ module.exports = function(io, db) {
       var items = inventory.toArray();
       var random = items.find((entry) => !isNaN(entry._id) && entry.count > 0);
 
-      if (random && !!this.position) {
-         WorldController.getWorld().then((world) => {
-            ActionController.action(world, this.position.x + this.position.y * world.width, 'drop_' + random._id, inventory);
-         })
+      if (!!this.position) {
+         if (random) {
+            WorldController.getWorld().then((world) => {
+               ActionController.action(world, this.position.x + this.position.y * world.width, 'drop_' + random._id, inventory);
+            })
+         }
+
+         io.emit('player_leave', this.position.uuid);
       }
    };
 

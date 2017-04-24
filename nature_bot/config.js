@@ -1,7 +1,7 @@
 module.exports = {
    components: [
       {
-         name: 'RemakeWorld'
+         name: 'TreeGrower'
       }
    ]
 };

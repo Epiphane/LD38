@@ -6,7 +6,7 @@ module.exports = function(TILE, OCCUPANT) {
       
    };
 
-   RandoComponent.prototype.tick = function(world) {
+   RandoComponent.prototype.tick = function(world, players) {
       return world.setTileAt(Math.floor(Math.random() * 20), Math.floor(Math.random() * 20), Math.floor(Math.random() * 4));
    };
 
