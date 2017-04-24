@@ -13,6 +13,10 @@ define([
        Icons.src = './images/ui_icons.png';
 
    var actions = {
+   // 'ACTION_NAME FROM controller/Action.js': {
+   //    text: What's shown on the UI. Keep it <= 8 characters.
+   //    icon: A tile offset in images/ui_icons.png
+   // }
       'dig_grass':      { text: 'Dig',      icon: [0, 0] },
       'dig_dirt':       { text: 'Dig',      icon: [1, 0] },
       'dig_sand':       { text: 'Dig',      icon: [2, 0] },
@@ -25,7 +29,9 @@ define([
       'plant_tree':     { text: 'Plant',    icon: [1, 2] },
       'grow_wheat':     { text: 'Grow',     icon: [6, 2] },
       'harvest_wheat':  { text: 'Harvest',  icon: [2, 2] },
-      'chop_tree':      { text: 'Chop',     icon: [3, 3] }
+      'chop_tree':      { text: 'Chop',     icon: [3, 3] },
+      'take_log':       { text: 'Take',     icon: [3, 3] },
+      'do_nothing':     { text: 'Nothing',  icon: [0, 0] }
    };
 
    return Juicy.Component.create('UI', {

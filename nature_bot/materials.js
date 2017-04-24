@@ -3,6 +3,12 @@
    var Init = function(TILE) {
 
       var materialMap = {
+         // [Name matching a tile in server/tiles.js]: {
+         //    offset_basic: [x, y] referring to a tile in images/terrain.png,
+         //    offset_above: [x, y] referring to a 4x4 set in images/serrain.png
+         //    pixel:  [r, g, b, a] for the minimap
+         //    grade:  1-100 for how "bumpy" it looks, 100=no bumps (optional)
+         // }
          GRASS: {
             offset_basic: [0,  0],
             offset_above: [6,  0],
@@ -54,6 +60,8 @@
             pixel: [176, 242, 255, 255]
          }
       };
+
+      // This defines what is on top of what e.g. SNOW is above all other kinds of tiles
       var precedence = ['SNOW', 'STONE', 'ICE', 'GRASS', 'DIRT', 'SOIL', 'SOIL_WET', 'SAND', 'WATER'].reverse();
 
       var MATERIALS = [];
@@ -61,7 +69,7 @@
          materialMap[key].height = precedence.indexOf(key);
          materialMap[key].key = key;
          if (materialMap[key].height < 0) {
-            console.error('Height precedence for ' + key + ' not set');
+            console.error('Height precedence for ' + key + ' not set. Add it to nature_bot/materials.js:63!');
          }
          MATERIALS[TILE[key]] = materialMap[key];
       }

@@ -1,6 +1,9 @@
 'use strict';
 
 (function() {
+   // This object is imported both server- and client-side.
+   // This means any functionality you add here is reflected on both (w00t)
+
    var Inventory = function() {
       this.items = {};
    };

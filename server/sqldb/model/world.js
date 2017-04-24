@@ -49,9 +49,6 @@ module.exports = function(sequelize, DataTypes) {
             });
 
             updateReplacements.push(this._id);
-            console.log('UPDATE worlds SET ' + updateSql.join(',') + ' WHERE _id = ?', {
-                replacements: updateReplacements
-            });
             return sequelize.query('UPDATE worlds SET ' + updateSql.join(',') + ' WHERE _id = ?', {
                 replacements: updateReplacements
             }).then(() => {

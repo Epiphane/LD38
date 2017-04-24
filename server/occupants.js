@@ -17,7 +17,10 @@ const OCCUPANTS = [
    'PILLAR',
    'LILLYPAD',
    'CORN_STALK',
-   'CROSS'
+   'CROSS',
+   'LOG',
+   // Just add more here,
+   // Then reference public/js/helpers/occupant.js
 ];
 
 module.exports = {};

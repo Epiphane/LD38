@@ -1,6 +1,29 @@
 'use strict';
 
 (function() {
+   // This object is imported both server- and client-side.
+   // This means any functionality you add here is reflected on both (w00t)
+
+   /**
+    * TL;DR for adding new actions:
+    *
+    * 1) Add the relevant entry in public/js/components/ui.js (go check it out)
+    * 2) Modify ActionController.available to add your action when applicable:
+    *      actions.push(my_action);
+    * 3) Add a function to ActionController with the same name:
+    *      ActionController.my_action = function(world, index, inventory) {
+    *         // Do whatever you want! just return a promise at the end
+    *         // If you don't want to return, return ActionController.done();
+    *         // ActionController.do_nothing is an example of this
+    *
+    *         Examples:
+    *         return ActionController.setTiles(world, [index1, index2], TILE.DIRT);
+    *
+    *         return ActionController.setTile(world, index, TILE.WATER).then(() => {
+    *            return ActionController.setOccupant(world, index, OCCUPANT.STUMP);
+    *         });
+    *      }
+    */
 
    var ActionController = {};
 
@@ -101,6 +124,10 @@
          case OCCUPANT.WHEAT_COMPLEAT:
             actions.push('harvest_wheat');
             break;
+
+         case OCCUPANT.LOG:
+            actions.push('take_log');
+            break;
          }
 
          if (occupants.findIndex(function(occupant) { return occupant === OCCUPANT.TREE; }) >= 0) {
@@ -128,6 +155,15 @@
          var bl = ActionController.getTile(world, x - 1, y + 1);
          var br = ActionController.getTile(world, x + 1, y + 1);
          return [above, below, left, right, tl, tr, bl, br];
+      };
+
+      ActionController.done = function() {
+         if (typeof($) !== 'undefined') {
+            return $.Deferred().resolve([]);
+         }
+         else {
+            return require('promise').resolve([]);
+         }
       };
 
       ActionController.setTiles = function(world, indices, tile) {
@@ -227,7 +263,7 @@
          return ActionController.setOccupant(world, index, occupant + 1);
       };
 
-      ActionController.chop_tree = function(world, index, inventory, tile) {
+      ActionController.chop_tree = function(world, index, inventory) {
          var x = index % world.width;
          var y = Math.floor(index / world.width);
          var trees = [[0, 0], [-1, 0], [1, 0], [0, -1], [0, 1]].map(function(offset) {
@@ -241,7 +277,22 @@
             }
          }).filter(function(index) { return index >= 0; });
 
-         return ActionController.setOccupants(world, trees, OCCUPANT.STUMP);
+         return ActionController.setOccupants(world, trees, OCCUPANT.LOG);
+      };
+
+      ActionController.take_log = function(world, index, inventory) {
+         ActionController.assert(world.occupants[index] === OCCUPANT.LOG, 'take_log must be used on a log');
+
+         inventory.addItem('log');
+
+         return ActionController.setOccupant(world, index, OCCUPANT.STUMP);
+      }
+
+      ActionController.do_nothing = function() {
+         console.log('do nothing');
+         return ActionController.done().then(() => {
+            console.log('did nothing');
+         });
       };
 
       ActionController.placeTile = function(world, index, inventory, tile) {
