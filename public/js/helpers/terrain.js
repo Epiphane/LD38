@@ -67,7 +67,13 @@ define([
          TerrainHelper.terrainAt(world, x,   y+1),
          TerrainHelper.terrainAt(world, x+1, y+1)
       ];
-      var offsets = Atlas.getOffsets(tiles[0], tiles[1], tiles[2], tiles[3], x ^ y);
+      var elevations = [
+         world.getElevation(x,   y),
+         world.getElevation(x+1, y),
+         world.getElevation(x,   y+1),
+         world.getElevation(x+1, y+1)
+      ];
+      var offsets = Atlas.getOffsets(tiles, elevations, x ^ y);
 
       var tile_size = TerrainHelper.tilesize;
       offsets.forEach(function(offset) {

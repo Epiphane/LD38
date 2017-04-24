@@ -1,11 +1,13 @@
 define([
    'constants/materials',
    'components/sprite',
+   'helpers/occupant',
    'helpers/terrain',
    'helpers/math'
 ], function(
    MATERIALS,
    SpriteComponent,
+   OccupantHelper,
    TerrainHelper,
    MathUtil
 ) {
@@ -84,9 +86,26 @@ define([
             if (dy ===  1) this.direction = 0;
             if (dy === -1) this.direction = 3;
 
-            this.walkToTile(world, this.tileX + dx, this.tileY + dy);
+            if (!OccupantHelper.isBlocked(world, this.tileX + dx, this.tileY + dy) &&
+                (dx === 0 || dy === 0 ||
+                !OccupantHelper.isBlocked(world, this.tileX, this.tileY + dy) ||
+                !OccupantHelper.isBlocked(world, this.tileX + dx, this.tileY))) {
+               this.walkToTile(world, this.tileX + dx, this.tileY + dy);
 
-            this.sendPosition(conn);
+               this.sendPosition(conn);
+            }
+            // Try moving just up
+            else if (dx !== 0 && dy !== 0 && !OccupantHelper.isBlocked(world, this.tileX, this.tileY + dy)) {
+               this.walkToTile(world, this.tileX, this.tileY + dy);
+
+               this.sendPosition(conn);
+            }
+            // or left
+            else if (dx !== 0 && dy !== 0 && !OccupantHelper.isBlocked(world, this.tileX + dx, this.tileY)) {
+               this.walkToTile(world, this.tileX + dx, this.tileY);
+
+               this.sendPosition(conn);
+            }
          }
       },
 
@@ -122,6 +141,7 @@ define([
                this.tileX = this.targetTileX;
                this.tileY = this.targetTileY;
             }
+
          }
          else {
             this.entity.position.x = this.tileX * TerrainHelper.tilesize;
@@ -129,6 +149,11 @@ define([
          }
 
          this.entity.getComponent('Image').frame += this.getDirectionFrame();
+         
+         var world = this.entity.state.world;
+         var tileX = Math.round(this.entity.position.x / TerrainHelper.tilesize);
+         var tileY = Math.round(this.entity.position.y / TerrainHelper.tilesize);
+         world.getComponent('WorldMap').updateOccupants(world, tileX + tileY * world.width);
       },
 
       render: function(context) {
@@ -138,7 +163,9 @@ define([
 
             var tile = this.entity.state.world.getTile(tileX, tileY);
             var material = MATERIALS[tile];
-            context.translate(0, Math.floor(-1.5 * (material.height - MATERIALS.length / 2)));
+            var elevation = this.entity.state.world.getElevation(tileX, tileY) / 10;
+                elevation += material.height;
+            context.translate(0, Math.floor(-elevation));
          }
       }
    });

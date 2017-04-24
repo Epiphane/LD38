@@ -1,17 +1,19 @@
 define([
    'constants/materials',
    'components/world_map',
+   'helpers/occupant',
    'helpers/terrain',
 ], function(
    MATERIALS,
    WorldMap,
+   OccupantHelper,
    TerrainHelper
 ) {
    return Juicy.Entity.extend({
       components: [WorldMap],
 
       constructor: function(game, minimap) {
-         Juicy.Entity.call(this);
+         Juicy.Entity.call(this, game);
 
          this.width = 0;
          this.height = 0;
@@ -21,7 +23,7 @@ define([
          this.minimap = minimap;
       },
 
-      update: function(updates) {
+      performUpdates: function(updates) {
          var self = this;
          updates.forEach(function(info) {
             switch (info[0]) {
@@ -33,6 +35,18 @@ define([
                break;
             }
          });
+      },
+
+      getElevation: function(x, y) {
+         return this.elevation[x + y * this.width];
+      },
+
+      getMoisture: function(x, y) {
+         return this.moisture[x + y * this.width];
+      },
+
+      getOccupant: function(x, y) {
+         return this.occupants[x + y * this.width];
       },
 
       getTile: function(x, y) {
@@ -68,6 +82,10 @@ define([
          this.getComponent('WorldMap').updateTile(this, index);
 
          return promise.resolve([1 /* occupant */, index, value]);
+      },
+
+      renderOccupant: function(context, x, y) {
+         OccupantHelper.draw(context, this, x, y);
       }
    });
 });

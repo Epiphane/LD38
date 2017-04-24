@@ -1,22 +1,31 @@
 define([
+   'constants/materials',
    'constants/occupants',
 ], function(
+   MATERIALS,
    OCCUPANT
 ) {
    var OccupantMap = {
-      WHEAT_SEED: {
-         offset: [0, 0]
-      },
-      WHEAT_SPROUT: {
-         offset: [1, 0]
-      },
-      WHEAT_GROWING: {
-         offset: [2, 0]
-      },
-      WHEAT_COMPLEAT: {
-         offset: [3, 0],
-         size:   [1, 2]
-      }
+      'NONE':           { block: 0 },
+      'WHEAT_SEED':     { block: 0, offset: [0, 0] },
+      'WHEAT_SPROUT':   { block: 0, offset: [1, 0] },
+      'WHEAT_GROWING':  { block: 0, offset: [2, 0] },
+      'WHEAT_COMPLEAT': { block: 1, offset: [3, 0], size: [1, 2] },
+      'STUMP':          { block: 1, offset: [7, 0] },
+      'TREE':           { block: 1, offset: [4, 0], size: [3, 5], anchor: [1, 1] },
+      'STONE':          { block: 2, offset: [2, 2], size: [2, 2] },
+      'ROCK':           { block: 1, offset: [2, 1] },
+      'TIKI':           { block: 2, offset: [0, 1], size: [2, 3] },
+      'REEDS_1':        { block: 1, offset: [0, 4], size: [1, 3] },
+      'REEDS_2':        { block: 1, offset: [0, 4], size: [1, 3] },
+      'MUSHROOM':       { block: 0, offset: [1, 4] },
+      'PILLAR':         { block: 1, offset: [2, 4], size: [1, 3] },
+      'INVIS':          { block: 1 },
+      'MARBLE':         { block: 1, offset: [1, 5] },
+      'LILLYPAD':       { block: 0, offset: [1, 6] },
+      'CORN_STALK':     { block: 1, offset: [4, 5], size: [1, 2] },
+      'CROSS':          { block: 1, offset: [5, 5], size: [1, 2] },
+      'CACTUS':         { block: 2, offset: [6, 5], size: [2, 2] },
    };
    var OccupantArray = [];
    for (var key in OCCUPANT) {
@@ -44,44 +53,46 @@ define([
                         offset[1] * tile_size, 
                         dwidth * tile_size, 
                         dheight * tile_size,
-                        dx * tile_size,
-                        dy * tile_size,
+                        dx,
+                        dy,
                         dwidth * tile_size,
                         dheight * tile_size);
    };
 
-   OccupantHelper.draw = function(context, world, x, y) {
+   OccupantHelper.draw = function(context, world, x, y, dx, dy) {
       var tile_size = OccupantHelper.tilesize;
       var occupant = OccupantHelper.occupantAt(world, x, y);
 
-      if (!occupant)
+      if (!occupant || occupant === OCCUPANT.INVIS || occupant === OCCUPANT.NONE)
          return;
 
-      // OCCUPANT OCCUPANT OCCUPANT
+      // OCCUPY WORLD STREET
       var occupantInfo = OccupantArray[occupant];
       var offset = occupantInfo.offset;
       var size   = occupantInfo.size   || [1, 1];
       var anchor = occupantInfo.anchor || [0, 0];
 
-      var dx = (x - 0.5 - anchor[0]);
-      var dy = (y + 0.5 + anchor[1] - size[1]);
+      var dx = (x - 0.5 - anchor[0]) * OccupantHelper.tilesize;
+      var dy = (y + 0.5 + anchor[1] - size[1]) * OccupantHelper.tilesize;
+
+      var tile = world.getTile(x, y);
+      var material = MATERIALS[tile];
+      dy += Math.floor(-1.5 * material.height);
+
       OccupantHelper.drawOffset(context, dx, dy, size[0], size[1], offset);
-
-      return;
-      var tiles = [
-         OccupantHelper.occupantAt(world, x,   y),
-         OccupantHelper.occupantAt(world, x+1, y),
-         OccupantHelper.occupantAt(world, x,   y+1),
-         OccupantHelper.occupantAt(world, x+1, y+1)
-      ];
-      // var offsets = Atlas.getOffsets(tiles[0], tiles[1], tiles[2], tiles[3], x ^ y);
-      var offsets = [[0, 0]];
-
-      var tile_size = OccupantHelper.tilesize;
-      offsets.forEach(function(offset) {
-         OccupantHelper.drawOffset(context, (x - 0.5) * tile_size, (y - 0.5) * tile_size, offset);
-      });
    };
+
+   OccupantHelper.isBlocked = function(world, x, y) {
+      for (var dx = -2; dx <= 0; dx ++) {
+         var occupant = OccupantHelper.occupantAt(world, x + dx, y);
+
+         if (OccupantArray[occupant].block + dx > 0) {
+            return true;
+         }
+      }
+
+      return false;
+   }
 
    return OccupantHelper;
 })

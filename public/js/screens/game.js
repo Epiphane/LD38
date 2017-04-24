@@ -34,7 +34,7 @@ define([
          connection.on('remake', this.fetch.bind(this));
 
          connection.on('updates', function(updates) {
-            self.world.update(updates);
+            self.world.performUpdates(updates);
          });
 
          connection.on('player_pos_update', function(newPosition) {
@@ -57,6 +57,9 @@ define([
          this.ui = new UI(this, this.sandbox);
          this.mainChar = new Character(this);
          this.mainChar.uuid = MathUtil.makeUuid();
+
+         this.world.setMainChar(this.mainChar);
+         this.world.setFriends(this.friends);
 
          this.minimapFrame = new Juicy.Entity(this, ['Image']);
          this.minimapFrame.setImage('./images/frame.png');
@@ -158,6 +161,7 @@ define([
          for (var friendID in this.friends) {
             this.friends[friendID].update();
          }
+         this.world.update(dt);
          this.ticks ++;
 
          this.ui.update(dt);
@@ -313,11 +317,6 @@ define([
          else {
             context.translate(-this.camera.x + width / 2, -this.camera.y + height / 2);
             this.world.render(context, this.camera.x - width / 2, this.camera.y - height / 2, width, height);
-         }
-         context.translate(-TerrainHelper.tilesize / 2, -TerrainHelper.tilesize / 2);
-         this.mainChar.render(context);
-         for (var friendID in this.friends) {
-            this.friends[friendID].render(context);
          }
          context.restore();
 

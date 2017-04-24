@@ -12,13 +12,15 @@ define([
       SAND: {
          offset_basic: [0,  2],
          offset_above: [6,  8],
-         pixel: [218, 215, 52, 255]
+         pixel: [218, 215, 52, 255],
+         stack: true
       },
       WATER: {
          offset_basic: [0,  1],
-         offset_above: [6, 12],
+         offset_above: [18, 0],
          offset_below: [10, 0],
-         pixel: [21, 108, 153, 255]
+         pixel: [21, 108, 153, 255],
+         stack: true
       },
       DIRT: {
          offset_basic: [0,  4],

@@ -1,7 +1,27 @@
-module.exports = {
-   NONE: 0,
-   WHEAT_SEED: 1,
-   WHEAT_SPROUT: 2,
-   WHEAT_GROWING: 3,
-   WHEAT_COMPLEAT: 4
-};
+const OCCUPANTS = [
+   'NONE',
+   'WHEAT_SEED',
+   'WHEAT_SPROUT',
+   'WHEAT_GROWING',
+   'WHEAT_COMPLEAT',
+   'STUMP',
+   'TREE',
+   'CACTUS',
+   'STONE',
+   'ROCK',
+   'MARBLE',
+   'TIKI',
+   'REEDS_1',
+   'REEDS_2',
+   'MUSHROOM',
+   'PILLAR',
+   'LILLYPAD',
+   'CORN_STALK',
+   'CROSS'
+];
+
+module.exports = {};
+
+OCCUPANTS.forEach((occupant, index) => {
+   module.exports[occupant] = index;
+});

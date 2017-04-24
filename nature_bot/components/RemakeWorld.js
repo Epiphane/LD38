@@ -142,26 +142,60 @@ module.exports = function(TILE, OCCUPANT) {
       }
    };
 
+   RemakeWorld.simpleBiome = function(biome) {
+      switch (biome) {
+      case 'OCEAN':
+      case 'MARSH':
+      case 'LAKE':
+         return 'WATER';
+
+      case 'ICE':
+         return 'ICE';
+
+      case 'BEACH':
+         return 'BEACH';
+
+      case 'SNOW':
+         return 'SNOW';
+
+      case 'TUNDRA':
+      case 'BARE':
+      case 'SCORCHED':
+      case 'TAIGA':
+         return 'ROCKY';
+
+      case 'SHRUBLAND':
+      case 'GRASSLAND':
+         return 'PLAIN';
+
+      case 'TEMPERATE_DESERT':
+      case 'TROPICAL_SEASONAL_FOREST':
+      case 'SUBTROPICAL_DESERT':
+         return 'DESERT';
+
+      case 'TEMPERATE_RAIN_FOREST':
+      case 'TEMPERATE_DECIDUOUS_FOREST':
+      case 'TROPICAL_RAIN_FOREST':
+         return 'FOREST';
+      }
+   };
+
    RemakeWorld.getTile = function(cell) {
-      if (cell.biome === 'OCEAN')                      return TILE.WATER;
-      if (cell.biome === 'MARSH')                      return TILE.WATER;
-      if (cell.biome === 'LAKE')                       return TILE.WATER;
-      if (cell.biome === 'ICE')                        return TILE.ICE;
-      if (cell.biome === 'BEACH')                      return TILE.SAND;
-      if (cell.biome === 'SNOW')                       return TILE.SNOW;
-      if (cell.biome === 'TUNDRA')                     return TILE.STONE;
-      if (cell.biome === 'BARE')                       return TILE.STONE;
-      if (cell.biome === 'SCORCHED')                   return TILE.STONE;
-      if (cell.biome === 'TAIGA')                      return TILE.STONE;
-      if (cell.biome === 'SHRUBLAND')                  return TILE.SAND;
-      if (cell.biome === 'TEMPERATE_DESERT')           return TILE.SAND;
-      if (cell.biome === 'TEMPERATE_RAIN_FOREST')      return TILE.GRASS;
-      if (cell.biome === 'TEMPERATE_DECIDUOUS_FOREST') return TILE.SAND;
-      if (cell.biome === 'GRASSLAND')                  return TILE.SAND;
-      if (cell.biome === 'TROPICAL_RAIN_FOREST')       return TILE.GRASS;
-      if (cell.biome === 'TROPICAL_SEASONAL_FOREST')   return TILE.SAND;
-      if (cell.biome === 'SUBTROPICAL_DESERT')         return TILE.SAND;
-      return TILE.GRASS;
+      switch (cell.biome) {
+      case 'WATER':
+      case 'ICE':
+      case 'SNOW':
+      case 'GRASS':
+         return TILE[cell.biome];
+      case 'FOREST':
+      case 'PLAIN':
+         return TILE.GRASS;
+      case 'BEACH':
+      case 'DESERT':
+         return TILE.SAND;
+      case 'ROCKY':
+         return TILE.STONE;
+      }
    };
 
    RemakeWorld.remake = function(width, height) {
@@ -172,6 +206,7 @@ module.exports = function(TILE, OCCUPANT) {
       Math.seedrandom(seed);
       // Math.seedrandom(4205);
       // Math.seedrandom(396);
+      Math.seedrandom(474);
 
       var tiles = [];
       var occupants = [];
@@ -334,11 +369,18 @@ module.exports = function(TILE, OCCUPANT) {
       });
 
       // Determine biomes
-      map.forEachCell((cell) => cell.biome = RemakeWorld.getBiome(cell));
+      map.forEachCell((cell) => cell.biome = RemakeWorld.simpleBiome(RemakeWorld.getBiome(cell)));
       map.forEachCell((cell) => cell.tile = RemakeWorld.getTile(cell));
 
-      var cells = map.cells();
+      map.forEachCell((cell, x, y) => {
+         if (cell.biome === 'DESERT' && Math.random() > 0.9)
+            cell.occupant = OCCUPANT.CACTUS;
 
+         if (cell.biome === 'FOREST' && Math.random() > 0.9)
+            cell.occupant = OCCUPANT.TREE;
+      });
+
+      var cells = map.cells();
       return {
          seed: seed,
          tiles: cells.map((cell) => cell.tile),
