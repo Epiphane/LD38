@@ -35,6 +35,8 @@ define([
       ticksPerMovement: 14,
       ticksMoved: 0,
 
+      emotion: null,
+
       isMoving: function() {
          return true;
       },
@@ -188,6 +190,6 @@ define([
                 elevation += material.height;
             context.translate(0, Math.floor(-elevation));
          }
-      }
+      },
    });
 });

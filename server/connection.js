@@ -24,6 +24,7 @@ module.exports = function(io, db) {
       socket.on('action', this.action.bind(this));
       socket.on('remake', this.remake.bind(this));
       socket.on('player_pos', this.positionChanged.bind(this));
+      socket.on('emote', this.emote.bind(this));
    };
 
    Connection.prototype.logout = function() {
@@ -77,6 +78,10 @@ module.exports = function(io, db) {
       this.position = newPosition;
 
       this.socket.broadcast.emit('player_pos_update', newPosition)
+   };
+
+   Connection.prototype.emote = function(emote) {
+      this.socket.broadcast.emit('emote', emote)
    };
 
    Connection.prototype.action = function(index, action, _id) {

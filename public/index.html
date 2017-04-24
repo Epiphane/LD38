@@ -13,7 +13,12 @@
   </div>
 
   <div class="overlay top-left">
-    <h2><a id="mute-link" onclick="toggleMute()" style="cursor: pointer">mute</a></h2>
+    <h2>
+		 <a id="mute-link" onclick="toggleMute()" style="cursor: pointer">mute</a>
+		 <a id="happy-link" onclick="Juicy.Game.trigger('emote', 27 + 41)" style="cursor: pointer">&#x1F603;</a>
+		 <a id="happy-link" onclick="Juicy.Game.trigger('emote', 27 + 41 * 8)" style="cursor: pointer">&#x1F622;</a>
+		 <a id="happy-link" onclick="Juicy.Game.trigger('emote', Math.floor(Math.random() * 1680))" style="cursor: pointer">&#x1F3B2;</a>
+	 </h2>
   </div>
 
   <canvas id="game-canvas"></canvas>

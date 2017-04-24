@@ -37,6 +37,12 @@ define([
             self.world.performUpdates(updates);
          });
 
+         connection.on('emote', function(whoWhich) {
+            if (self.friends[whoWhich.who]) {
+               self.doEmote(self.friends[whoWhich.who], whoWhich.which);
+            }
+         });
+
          connection.on('player_pos_update', function(newPosition) {
             var movingFriend = self.friends[newPosition.uuid];
             if (!movingFriend) {
@@ -115,6 +121,17 @@ define([
 
       key_SPACE: function() {
          this.connection.emit('remake');
+      },
+
+      doEmote: function(player, which) {
+         console.log("Add emoji", which, "at", player.position);
+         player.getComponent('Emotion').lifeLeft = 100;
+         player.getComponent('Emotion').emojiFrame = which;
+      },
+
+      emote: function(which) {
+         this.connection.emit('emote', {who: this.mainChar.uuid, which: which});
+         this.doEmote(this.mainChar, which);
       },
 
       keypress: function(e) {

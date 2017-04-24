@@ -519,7 +519,7 @@
    /* -------------------- Typical Components --------------- */
    Component.create('Image', {
       constructor: function(entity) {
-         var self = this;
+         var self = this;  
 
          this._tint = false;
          this.opacity = 1;

@@ -18,7 +18,7 @@ if (!secret) {
    secret = localEnv.ELEVATED_SECRET;
 }
 
-var socket    = ioClient.connect(domain);
+var socket    = ioClient.connect("http://localhost:3000/");
 var bot       = new NatureBot(domain, socket, config);
 
 socket.on('connect', function() {
