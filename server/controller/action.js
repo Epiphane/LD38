@@ -74,7 +74,7 @@
 
          if (inventory.hasItem('sandbox')) {
             for (var tile in TILE) {
-               actions.push('place_' + tile);               
+               actions.push('place_' + tile);
             }
          }
 
@@ -83,7 +83,7 @@
                                                       actions.push('dig_grass');
             if (inventory.hasItem('seed_tree'))     { actions.push('plant_tree'); }
             break;
-         
+
          case TILE.SOIL:
          case TILE.SOIL_WET:
                                                       actions.push('water_soil');
@@ -96,7 +96,7 @@
             if (currentTile === TILE.DIRT) {
                var acceptable = [TILE.SOIL, TILE.SOIL_WET, TILE.DIRT, TILE.GRASS];
                if (neighbors.every(function(neighbor) { return acceptable.indexOf(neighbor) >= 0; })) {
-                  actions.push('plow_dirt'); 
+                  actions.push('plow_dirt');
                }
             }
             break;
@@ -105,7 +105,7 @@
             if (close.findIndex(function(other) { return other === TILE.WATER; }) >= 0)
                actions.push('dig_sand');
             break;
-         
+
          case TILE.WATER:
             if (close.findIndex(function(other) { return other === TILE.DIRT || other === TILE.GRASS; }) >= 0)
                actions.push('shore_up_dirt');
@@ -186,7 +186,7 @@
          indices.forEach(function(index) {
             ActionController.assert(index >= 0 && index < world.width * world.height, 'index ' + index + ' is out of bounds');
          });
-         
+
          return world.setOccupants(indices, tile);
       };
 
@@ -213,6 +213,8 @@
 
          var close = ActionController.getCloseTiles(world, index);
          ActionController.assert(close.findIndex(function(other) { return other === TILE.WATER; }) >= 0, 'dig_dirt must be next to water');
+
+         return ActionController.setTile(world, index, TILE.WATER);
       };
 
       ActionController.dig_sand = function(world, index, inventory) {
