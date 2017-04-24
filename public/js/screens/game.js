@@ -254,7 +254,7 @@ define([
          // Draw pre-rendered map
          if (this.holistic) {
             context.save();
-            this.mapScale = (width - this.minimapFrame.width) / (this.world.width * TerrainHelper.tilesize);
+            this.mapScale = height / (this.world.height * TerrainHelper.tilesize);
             context.scale(this.mapScale, this.mapScale);
             this.world.render(context, 0, 0, this.world.width * TerrainHelper.tilesize, this.world.height * TerrainHelper.tilesize);
             context.translate(-TerrainHelper.tilesize / 2, -TerrainHelper.tilesize / 2);

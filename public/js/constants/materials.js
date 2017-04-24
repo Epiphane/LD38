@@ -51,7 +51,7 @@ define([
          pixel: [176, 242, 255, 255]
       }
    };
-   var precedence = ['ICE', 'SNOW', 'STONE', 'GRASS', 'DIRT', 'SOIL', 'SOIL_WET', 'SAND', 'WATER'].reverse();
+   var precedence = ['SNOW', 'STONE', 'ICE', 'GRASS', 'DIRT', 'SOIL', 'SOIL_WET', 'SAND', 'WATER'].reverse();
 
    var MATERIALS = [];
    for (var key in TILE) {

@@ -7,6 +7,7 @@ module.exports = function(sequelize, DataTypes) {
             autoIncrement: true,
             primaryKey: true
         },
+        seed: DataTypes.INTEGER,
         tiles: DataTypes.ARRAY(DataTypes.INTEGER),
         occupants: DataTypes.ARRAY(DataTypes.INTEGER),
         width: {

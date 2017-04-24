@@ -51,7 +51,7 @@ NatureBot.prototype.init = function() {
       log.info('Initializing ' + component.name);
       return component.init(world, socket);
    })).catch((e) => {
-      log.error('Init error: ' + e.message);
+      log.error(e.stack);
    });
 };
 
