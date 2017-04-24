@@ -40,7 +40,7 @@ require([
       Juicy.Game.resize();
    };
 
-   var Music = new buzz.sound("/audio/Sweden", {
+   var Music = new buzz.sound("/audio/FubSong", {
        formats: [ "mp3" ]
    });
 
