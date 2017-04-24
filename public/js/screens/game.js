@@ -40,10 +40,10 @@ define([
          connection.on('player_pos_update', function(newPosition) {
             var movingFriend = self.friends[newPosition.uuid];
             if (!movingFriend) {
-               movingFriend = new Character(this);
+               movingFriend = new Character(self);
                self.friends[newPosition.uuid] = movingFriend;
             }
-            movingFriend.getComponent('Character').walkToTile(newPosition.x, newPosition.y);
+            movingFriend.getComponent('Character').walkToTile(self, newPosition.x, newPosition.y);
             movingFriend.getComponent('Character').direction = newPosition.direction;
          });
 
@@ -54,7 +54,12 @@ define([
 
          this.camera = new Juicy.Point();
 
+         this.inventory = new Inventory();
+         if (this.sandbox)
+            this.inventory.addItem('sandbox');
+
          this.ui = new UI(this, this.sandbox);
+         this.ui.getComponent('UI').inventory = this.inventory;
          this.mainChar = new Character(this);
          this.mainChar.uuid = MathUtil.makeUuid();
 
@@ -63,10 +68,6 @@ define([
 
          this.minimapFrame = new Juicy.Entity(this, ['Image']);
          this.minimapFrame.setImage('./images/frame.png');
-
-         this.inventory = new Inventory();
-         if (this.sandbox)
-            this.inventory.addItem('sandbox');
       },
 
       fetch: function() {

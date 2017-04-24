@@ -12,11 +12,13 @@ module.exports = function(io, db) {
       this.game = null;
       this.elevated = (process.env.NODE_ENV === 'development');
       this.inventory = new Inventory();
+      this.position = null;
 
       if (this.elevated) {
          this.inventory.addItem('sandbox');
       }
 
+      socket.on('disconnect', this.disconnect.bind(this));
       socket.on('updates', this.update.bind(this));
       socket.on('elevate', this.elevate.bind(this));
       socket.on('action', this.action.bind(this));
@@ -29,6 +31,16 @@ module.exports = function(io, db) {
    };
 
    Connection.prototype.disconnect = function() {
+      // Drop something random I guess
+      var inventory = this.inventory
+      var items = inventory.toArray();
+      var random = items.find((entry) => !isNaN(entry._id) && entry.count > 0);
+
+      if (random && !!this.position) {
+         WorldController.getWorld().then((world) => {
+            ActionController.action(world, this.position.x + this.position.y * world.width, 'drop_' + random._id, inventory);
+         })
+      }
    };
 
    Connection.prototype.update = function(updates, _id) {
@@ -58,6 +70,8 @@ module.exports = function(io, db) {
    };
 
    Connection.prototype.positionChanged = function(newPosition) {
+      this.position = newPosition;
+
       this.socket.broadcast.emit('player_pos_update', newPosition)
    };
 

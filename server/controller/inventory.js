@@ -15,8 +15,25 @@
       this.items[key] += count;
    };
 
+   Inventory.prototype.removeItem = function(key, count) {
+      count = count || 1;
+
+      return this.addItem(key, -count);
+   };
+
    Inventory.prototype.hasItem = function(key) {
       return this.items.hasOwnProperty(key) && this.items[key] > 0;
+   };
+
+   Inventory.prototype.toArray = function() {
+      var array = [];
+      for (var key in this.items) {
+         if (this.items.hasOwnProperty(key)) {
+            array.push({ _id: parseInt(key), count: this.items[key] });
+         }
+      }
+
+      return array;
    };
 
    // web AND server woahh

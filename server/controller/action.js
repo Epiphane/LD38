@@ -143,6 +143,10 @@
             throw new Error('Assertion failed: ' + (message || ''));
       };
 
+      ActionController.getOccupantIndex = function(world, index) {
+         return ActionController.getOccupant(world, index % world.width, Math.floor(index / world.width));
+      };
+
       ActionController.getCloseTiles = function(world, index) {
          var x = index % world.width;
          var y = Math.floor(index / world.width);
@@ -168,7 +172,7 @@
 
       ActionController.setTiles = function(world, indices, tile) {
          indices.forEach(function(index) {
-            ActionController.assert(index >= 0 && index < world.width * world.height, 'index is out of bounds');
+            ActionController.assert(index >= 0 && index < world.width * world.height, 'index ' + index + ' is out of bounds');
          });
 
          return world.setTiles(indices, tile);
@@ -180,7 +184,7 @@
 
       ActionController.setOccupants = function(world, indices, tile) {
          indices.forEach(function(index) {
-            ActionController.assert(index >= 0 && index < world.width * world.height, 'index is out of bounds');
+            ActionController.assert(index >= 0 && index < world.width * world.height, 'index ' + index + ' is out of bounds');
          });
          
          return world.setOccupants(indices, tile);
@@ -193,7 +197,15 @@
       ActionController.dig_grass = function(world, index, inventory) {
          ActionController.assert(world.tiles[index] === TILE.GRASS, 'dig_grass must be on grass');
 
-         return ActionController.setTile(world, index, TILE.DIRT);
+         var occupant = ActionController.getOccupantIndex(world, index);
+
+         return ActionController.setTile(world, index, TILE.DIRT).then((update1) => {
+            if (occupant === OCCUPANT.STUMP) {
+               return ActionController.setOccupant(world, index, OCCUPANT.NONE).then((update2) => {
+                  return update1.concat(update2);
+               })
+            }
+         });
       };
 
       ActionController.dig_dirt = function(world, index, inventory) {
@@ -201,8 +213,6 @@
 
          var close = ActionController.getCloseTiles(world, index);
          ActionController.assert(close.findIndex(function(other) { return other === TILE.WATER; }) >= 0, 'dig_dirt must be next to water');
-
-         return ActionController.setTile(world, index, TILE.WATER);
       };
 
       ActionController.dig_sand = function(world, index, inventory) {
@@ -277,15 +287,19 @@
             }
          }).filter(function(index) { return index >= 0; });
 
-         return ActionController.setOccupants(world, trees, OCCUPANT.LOG);
+         return ActionController.setOccupants(world, trees, OCCUPANT.STUMP).then((update1) => {
+            return ActionController.setOccupants(world, trees.map((i) => i - world.width), OCCUPANT.LOG).then((update2) => {
+               return update1.concat(update2);
+            })
+         })
       };
 
       ActionController.take_log = function(world, index, inventory) {
          ActionController.assert(world.occupants[index] === OCCUPANT.LOG, 'take_log must be used on a log');
 
-         inventory.addItem('log');
+         inventory.addItem(OCCUPANT.LOG);
 
-         return ActionController.setOccupant(world, index, OCCUPANT.STUMP);
+         return ActionController.setOccupant(world, index, OCCUPANT.NONE);
       }
 
       ActionController.do_nothing = function() {
@@ -302,12 +316,27 @@
          return ActionController.setTile(world, index, TILE[tile]);
       };
 
+      ActionController.dropItem = function(world, index, inventory, item) {
+         ActionController.assert(inventory.hasItem(item), 'cannot drop an item you dont have');
+
+         inventory.removeItem(item);
+
+         return ActionController.setOccupant(world, index, item);
+      };
+
       ActionController.action = function(world, index, action, inventory) {
          var x = index % world.width;
          var y = Math.floor(index / world.width);
          var availableActions = ActionController.available(world, x, y, inventory);
 
-         if (availableActions.indexOf(action) < 0) {
+         if (action.indexOf('drop_') === 0) {
+            return ActionController.dropItem(world, index, inventory, parseInt(action.substr(5))).then((updates) => {
+               return { executed: true, updates: updates };
+            }).catch((e) => {
+               return { executed: false, reason: e.message };
+            });
+         }
+         else if (availableActions.indexOf(action) < 0) {
             return { executed: false, reason: 'Action ' + action + ' not available.' };
          }
          else if (action.indexOf('place_') === 0) {

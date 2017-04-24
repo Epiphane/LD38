@@ -76,7 +76,7 @@ define([
       if (!occupant || occupant === OCCUPANT.INVIS || occupant === OCCUPANT.NONE)
          return;
 
-      // OCCUPY WORLD STREET
+      // OCCUPANT WORLD STREET
       var occupantInfo = OccupantArray[occupant];
       var offset = occupantInfo.offset;
       var size   = occupantInfo.size   || [1, 1];
