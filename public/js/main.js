@@ -33,12 +33,37 @@ require([
 
    window.onmousewheel = function(e) {
       Juicy.Game.trigger('mousewheel', e);
-   }
+   };
 
    // On window resize, fill it with the game again!
    window.onresize = function() {
       Juicy.Game.resize();
    };
+
+   var Music = new buzz.sound("/audio/Sweden", {
+       formats: [ "mp3" ]
+   });
+
+   Music.play().loop();
+
+   window.muted = JSON.parse(localStorage.getItem('mute') || 'false');
+   if (muted) {
+      Music.mute();
+      $('#mute-link').text('unmute');
+   }
+   window.toggleMute = function() {
+      muted = !muted;
+      localStorage.setItem('mute', muted);
+
+      if (muted) {
+         Music.mute();
+         $('#mute-link').text('unmute');
+      }
+      else {
+         Music.unmute();
+         $('#mute-link').text('mute');
+      }
+   }
 
    // Initialize connection to server
    var connection = new ConnectionManager();
