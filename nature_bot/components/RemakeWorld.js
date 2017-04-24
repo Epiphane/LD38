@@ -2,7 +2,7 @@ var Promise          = require('promise');
 var seedrandom       = require('seedrandom');
 var FastSimplexNoise = require('fast-simplex-noise').default;
 
-module.exports = function(TILE, OCCUPANT) {
+module.exports = function(TILE, OCCUPANT, MATERIAL) {
    var RemakeWorld = function(params) {
       this.height = params.height || 100;
       this.width  = params.width  || 100;
@@ -206,7 +206,7 @@ module.exports = function(TILE, OCCUPANT) {
       Math.seedrandom(seed);
       // Math.seedrandom(4205);
       // Math.seedrandom(396);
-      Math.seedrandom(474);
+      // Math.seedrandom(474);
 
       var tiles = [];
       var occupants = [];
@@ -369,23 +369,68 @@ module.exports = function(TILE, OCCUPANT) {
       });
 
       // Determine biomes
-      map.forEachCell((cell) => cell.biome = RemakeWorld.simpleBiome(RemakeWorld.getBiome(cell)));
-      map.forEachCell((cell) => cell.tile = RemakeWorld.getTile(cell));
+      map.forEachCell((cell) => {
+         cell.biome = RemakeWorld.simpleBiome(RemakeWorld.getBiome(cell));
+         cell.tile = RemakeWorld.getTile(cell);
 
-      map.forEachCell((cell, x, y) => {
+         cell.elevation = Math.floor(cell.elevation * 100);
+         cell.material = MATERIAL[cell.tile];
+         cell.grade = Math.floor(cell.elevation / (cell.material.grade || 10));
+      });
+
+      function match(cell, dx, dy) {
+         var other = map.get(cell.x + dx, cell.y + dy);
+
+         return other.biome === cell.biome && other.grade === cell.grade;
+      }
+
+      function isFree(cell, width) {
+         while (width-- > 0) {
+            var other = map.get(cell.x + width, cell.y);
+
+            if (other.occupant) return false;
+         }
+
+         return true;
+      }
+
+      function shuffle(a) {
+         var j, x, i;
+         for (i = a.length; i; i--) {
+            j = Math.floor(Math.random() * i);
+            x = a[i - 1];
+            a[i - 1] = a[j];
+            a[j] = x;
+         }
+      }
+
+      var tikiPlaced = false;
+      var cells = map.cells();
+      shuffle(cells);
+      cells.forEach((cell) => {
          if (cell.biome === 'DESERT' && Math.random() > 0.9)
             cell.occupant = OCCUPANT.CACTUS;
 
-         if (cell.biome === 'FOREST' && Math.random() > 0.9)
-            cell.occupant = OCCUPANT.TREE;
+         if (cell.biome === 'FOREST' && Math.random() > 0.9) {
+            if (match(cell, -1, 0) && match(cell, 1, 0) && match(cell, 0, -1)) {
+               cell.occupant = OCCUPANT.TREE;
+            }
+         }
+
+         if (cell.biome === 'ROCKY') {
+            if (!tikiPlaced && isFree(cell, 2) && match(cell, -1, 0) && match(cell, 1, 0) && match(cell, 0, -1) && match(cell, 1, -1)) {
+               cell.occupant = OCCUPANT.TIKI;
+               tikiPlaced = true;
+            }
+         }
       });
 
       var cells = map.cells();
       return {
          seed: seed,
          tiles: cells.map((cell) => cell.tile),
-         elevation: cells.map((cell) => Math.floor(cell.elevation * 100)),
-         moisture: cells.map((cell) => Math.floor(cell.moisture * 100)),
+         elevation: cells.map((cell) => cell.elevation),
+         moisture: cells.map((cell) => cell.moisture),
          occupants: cells.map((cell) => cell.occupant)
       };
    }

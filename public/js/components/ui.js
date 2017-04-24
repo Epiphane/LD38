@@ -16,14 +16,16 @@ define([
       'dig_grass':      { text: 'Dig',      icon: [0, 0] },
       'dig_dirt':       { text: 'Dig',      icon: [1, 0] },
       'dig_sand':       { text: 'Dig',      icon: [2, 0] },
-      'shore_up':       { text: 'Shore Up', icon: [2, 1] },
+      'shore_up_dirt':  { text: 'Shore Up', icon: [3, 1] },
+      'shore_up_sand':  { text: 'Shore Up', icon: [2, 1] },
       'plow_dirt':      { text: 'Plow',     icon: [3, 0] },
       'water_soil':     { text: 'Water',    icon: [6, 2] },
       'plant_wheat':    { text: 'Plant',    icon: [2, 2] },
       'plant_sapling':  { text: 'Plant',    icon: [0, 2] },
       'plant_tree':     { text: 'Plant',    icon: [1, 2] },
       'grow_wheat':     { text: 'Grow',     icon: [6, 2] },
-      'harvest_wheat':  { text: 'Harvest',  icon: [6, 2] }
+      'harvest_wheat':  { text: 'Harvest',  icon: [2, 2] },
+      'chop_tree':      { text: 'Chop',     icon: [3, 3] }
    };
 
    return Juicy.Component.create('UI', {

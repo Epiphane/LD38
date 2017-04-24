@@ -4,6 +4,7 @@ var http    = require('http').Server(app);
 var io      = require('socket.io')(http);
 var fs      = require('fs');
 
+var config  = require('./config/environment');
 var sqldb   = require('./sqldb');
 var api     = require('./api');
 var Connection = require('./connection')(io, sqldb);
@@ -21,6 +22,9 @@ app.use('/lib', express.static(__dirname + '/../node_modules/'));
 
 // Game
 app.use('/js/controller', express.static(__dirname + '/controller'));
+app.use('/js/constants/materials.js', function(req, res) {
+   res.sendFile(config.root + '/nature_bot/materials.js');
+});
 app.use('/js/constants/tiles.js', function(req, res) {
    res.end('define([], function() { return ' + JSON.stringify(TILES) + '; })');
 });

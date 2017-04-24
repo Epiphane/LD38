@@ -15,8 +15,8 @@ define([
          this.occ_context = this.occ_canvas.getContext('2d');
 
          this.staging = document.createElement('canvas');
-         this.staging.width = 3 * OccupantHelper.tilesize;
-         this.staging.height = 3 * OccupantHelper.tilesize;
+         this.staging.width = 5 * OccupantHelper.tilesize;
+         this.staging.height = 6 * OccupantHelper.tilesize;
          this.staging_context = this.staging.getContext('2d');
 
          var self = this;
@@ -63,8 +63,8 @@ define([
          var x = index % world.width;
          var y = Math.floor(index / world.width);
          var bounds = {
-            x: (x - 1.5) * OccupantHelper.tilesize, 
-            y: (y - 1.5) * OccupantHelper.tilesize
+            x: (x - 2.5) * OccupantHelper.tilesize, 
+            y: (y - 4.5) * OccupantHelper.tilesize
          };
 
          this.occ_context.clearRect(bounds.x, bounds.y, this.staging.width, this.staging.height);
@@ -73,7 +73,7 @@ define([
          this.staging_context.clearRect(0, 0, this.staging.width, this.staging.height);
          this.staging_context.translate(-bounds.x, -bounds.y);
 
-         for (var j = y - 1; j <= y + 6; j ++) {
+         for (var j = y - 4; j <= y + 6; j ++) {
             for (var i = x - 4; i <= x + 4; i ++) {
                if (i < 0 || j < 0) continue;
 

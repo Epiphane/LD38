@@ -28,10 +28,10 @@ define([
          updates.forEach(function(info) {
             switch (info[0]) {
             case 0: // tile
-               self.setTile(info[1], info[2]);
+               self.setTiles([info[1]], info[2]);
                break;
             case 1: // occupant
-               self.setOccupant(info[1], info[2]);
+               self.setOccupants([info[1]], info[2]);
                break;
             }
          });
@@ -62,26 +62,32 @@ define([
          this.ready = true;
       },
 
-      setTile: function(index, value) {
+      setTiles: function(indices, value) {
          // Use a promise to match the functionality of sqldb/model/world
          var promise = $.Deferred();
 
-         this.minimap.setPixel(index, value);
+         var self = this;
+         return promise.resolve(indices.map(function(index) {
+            self.minimap.setPixel(index, value);
 
-         this.tiles[index] = value;
-         this.getComponent('WorldMap').updateTile(this, index);
+            self.tiles[index] = value;
+            self.getComponent('WorldMap').updateTile(self, index);
 
-         return promise.resolve([0 /* occupant */, index, value]);
+            return [0 /* tile */, index, value];
+         }));
       },
 
-      setOccupant: function(index, value) {
+      setOccupants: function(indices, value) {
          // Use a promise to match the functionality of sqldb/model/world
          var promise = $.Deferred();
 
-         this.occupants[index] = value;
-         this.getComponent('WorldMap').updateTile(this, index);
+         var self = this;
+         return promise.resolve(indices.map(function(index) {
+            self.occupants[index] = value;
+            self.getComponent('WorldMap').updateTile(self, index);
 
-         return promise.resolve([1 /* occupant */, index, value]);
+            return [1 /* occupant */, index, value];
+         }));
       },
 
       renderOccupant: function(context, x, y) {

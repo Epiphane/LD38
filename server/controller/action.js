@@ -27,11 +27,25 @@
       ActionController.available = function(world, x, y, inventory) {
          var inventory = inventory;
          var currentTile = ActionController.getTile(world, x, y);
-         var currentOccupant = ActionController.getOccupant(world, x, y);
          var above = ActionController.getTile(world, x, y - 1);
          var below = ActionController.getTile(world, x, y + 1);
          var left  = ActionController.getTile(world, x - 1, y);
          var right = ActionController.getTile(world, x + 1, y);
+         var tl = ActionController.getTile(world, x - 1, y - 1);
+         var tr = ActionController.getTile(world, x + 1, y - 1);
+         var bl = ActionController.getTile(world, x - 1, y + 1);
+         var br = ActionController.getTile(world, x + 1, y + 1);
+         var neighbors = [above, below, left, right];
+         var close = [above, below, left, right, tl, tr, bl, br];
+
+         var currentOccupant = ActionController.getOccupant(world, x, y);
+         var occupants = [
+            currentOccupant,
+            ActionController.getOccupant(world, x-1, y),
+            ActionController.getOccupant(world, x+1, y),
+            ActionController.getOccupant(world, x, y-1),
+            ActionController.getOccupant(world, x, y+1)
+         ];
 
          var actions = [];
 
@@ -52,23 +66,28 @@
                                                       actions.push('water_soil');
             if (inventory.hasItem('seed_wheat'))    { actions.push('plant_wheat'); }
             if (inventory.hasItem('seed_sapling'))  { actions.push('plant_sapling'); }
-            break;
          case TILE.DIRT:
-                                                      // actions.push('dig_dirt');
+            if (close.findIndex(function(other) { return other === TILE.WATER; }) >= 0)
+               actions.push('dig_dirt');
+
             if (currentTile === TILE.DIRT) {
                var acceptable = [TILE.SOIL, TILE.SOIL_WET, TILE.DIRT, TILE.GRASS];
-               if (acceptable.indexOf(above) >= 0 && acceptable.indexOf(below) >= 0 && acceptable.indexOf(left) >= 0 && acceptable.indexOf(right) >= 0) {
+               if (neighbors.every(function(neighbor) { return acceptable.indexOf(neighbor) >= 0; })) {
                   actions.push('plow_dirt'); 
                }
             }
             break;
 
          case TILE.SAND:
-            actions.push('dig_sand');
+            if (close.findIndex(function(other) { return other === TILE.WATER; }) >= 0)
+               actions.push('dig_sand');
             break;
          
          case TILE.WATER:
-            actions.push('shore_up');
+            if (close.findIndex(function(other) { return other === TILE.DIRT || other === TILE.GRASS; }) >= 0)
+               actions.push('shore_up_dirt');
+            if (close.findIndex(function(other) { return other === TILE.SAND; }) >= 0)
+               actions.push('shore_up_sand');
             break;
          }
 
@@ -84,6 +103,10 @@
             break;
          }
 
+         if (occupants.findIndex(function(occupant) { return occupant === OCCUPANT.TREE; }) >= 0) {
+            actions.push('chop_tree');
+         }
+
          return actions;
       };
 
@@ -93,16 +116,42 @@
             throw new Error('Assertion failed: ' + (message || ''));
       };
 
-      ActionController.setTile = function(world, index, tile) {
-         ActionController.assert(index >= 0 && index < world.width * world.height, 'index is out of bounds');
+      ActionController.getCloseTiles = function(world, index) {
+         var x = index % world.width;
+         var y = Math.floor(index / world.width);
+         var above = ActionController.getTile(world, x, y - 1);
+         var below = ActionController.getTile(world, x, y + 1);
+         var left  = ActionController.getTile(world, x - 1, y);
+         var right = ActionController.getTile(world, x + 1, y);
+         var tl = ActionController.getTile(world, x - 1, y - 1);
+         var tr = ActionController.getTile(world, x + 1, y - 1);
+         var bl = ActionController.getTile(world, x - 1, y + 1);
+         var br = ActionController.getTile(world, x + 1, y + 1);
+         return [above, below, left, right, tl, tr, bl, br];
+      };
 
-         return world.setTile(index, tile).then((result) => [result]);
+      ActionController.setTiles = function(world, indices, tile) {
+         indices.forEach(function(index) {
+            ActionController.assert(index >= 0 && index < world.width * world.height, 'index is out of bounds');
+         });
+
+         return world.setTiles(indices, tile);
+      };
+
+      ActionController.setTile = function(world, index, tile) {
+         return ActionController.setTiles(world, [index], tile);
+      };
+
+      ActionController.setOccupants = function(world, indices, tile) {
+         indices.forEach(function(index) {
+            ActionController.assert(index >= 0 && index < world.width * world.height, 'index is out of bounds');
+         });
+         
+         return world.setOccupants(indices, tile);
       };
 
       ActionController.setOccupant = function(world, index, tile) {
-         ActionController.assert(index >= 0 && index < world.width * world.height, 'index is out of bounds');
-         
-         return world.setOccupant(index, tile).then((result) => [result]);
+         return ActionController.setOccupants(world, [index], tile);
       };
 
       ActionController.dig_grass = function(world, index, inventory) {
@@ -112,19 +161,37 @@
       };
 
       ActionController.dig_dirt = function(world, index, inventory) {
-         ActionController.assert(world.tiles[index] === TILE.DIRT, 'dig_dirt must be on dirt');
+         ActionController.assert([TILE.DIRT, TILE.SOIL, TILE.SOIL_WET].indexOf(world.tiles[index]) >= 0, 'dig_dirt must be on dirt');
 
-         return ActionController.setTile(world, index, TILE.DIRT);
+         var close = ActionController.getCloseTiles(world, index);
+         ActionController.assert(close.findIndex(function(other) { return other === TILE.WATER; }) >= 0, 'dig_dirt must be next to water');
+
+         return ActionController.setTile(world, index, TILE.WATER);
       };
 
       ActionController.dig_sand = function(world, index, inventory) {
          ActionController.assert(world.tiles[index] === TILE.SAND, 'dig_sand must be on sand');
 
+         var close = ActionController.getCloseTiles(world, index);
+         ActionController.assert(close.findIndex(function(other) { return other === TILE.WATER; }) >= 0, 'dig_sand must be next to water');
+
          return ActionController.setTile(world, index, TILE.WATER);
       };
 
-      ActionController.shore_up = function(world, index, inventory) {
+      ActionController.shore_up_dirt = function(world, index, inventory) {
          ActionController.assert(world.tiles[index] === TILE.WATER, 'shore_up must be on water');
+
+         var close = ActionController.getCloseTiles(world, index);
+         ActionController.assert(close.findIndex(function(other) { return other === TILE.DIRT || other === TILE.GRASS; }) >= 0, 'shore_up must be next to dirt');
+
+         return ActionController.setTile(world, index, TILE.DIRT);
+      };
+
+      ActionController.shore_up_sand = function(world, index, inventory) {
+         ActionController.assert(world.tiles[index] === TILE.WATER, 'shore_up must be on water');
+
+         var close = ActionController.getCloseTiles(world, index);
+         ActionController.assert(close.findIndex(function(other) { return other === TILE.SAND; }) >= 0, 'shore_up must be next to sand');
 
          return ActionController.setTile(world, index, TILE.SAND);
       };
@@ -158,6 +225,23 @@
          ActionController.assert(occupant >= OCCUPANT.WHEAT_SEED && occupant <= OCCUPANT.WHEAT_COMPLEAT, 'grow_wheat must be used on wheat');
 
          return ActionController.setOccupant(world, index, occupant + 1);
+      };
+
+      ActionController.chop_tree = function(world, index, inventory, tile) {
+         var x = index % world.width;
+         var y = Math.floor(index / world.width);
+         var trees = [[0, 0], [-1, 0], [1, 0], [0, -1], [0, 1]].map(function(offset) {
+            var occupant = ActionController.getOccupant(world, x + offset[0], y + offset[1]);
+
+            if (occupant === OCCUPANT.TREE) {
+               return index + offset[0] + offset[1] * world.width;
+            }
+            else {
+               return -1;
+            }
+         }).filter(function(index) { return index >= 0; });
+
+         return ActionController.setOccupants(world, trees, OCCUPANT.STUMP);
       };
 
       ActionController.placeTile = function(world, index, inventory, tile) {

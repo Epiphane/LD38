@@ -53,7 +53,7 @@ define([
             tile: tile,
             mat: MATERIALS[tile], 
             elevation: elevations[index] || 0,
-            grade: Math.floor((elevations[index] || 0) / 10),
+            grade: Math.floor((elevations[index] || 0) / (MATERIALS[tile].grade || 10)),
             flag: 1 << index,
             drawn: false
          };
@@ -72,8 +72,7 @@ define([
       //    }
       // });
       var step = 10;
-      while (index < infos.length && infos[index].mat.key === base.mat.key && 
-         (infos[index].grade === base.grade || !!base.mat.stack)) {
+      while (index < infos.length && infos[index].mat.key === base.mat.key && infos[index].grade === base.grade) {
          flags += infos[index].flag;
          index ++;
       }
@@ -92,8 +91,7 @@ define([
       while (index < infos.length) {
          var tile  = infos[index];
          var flags = 0;
-         while (index < infos.length && infos[index].mat.key === tile.mat.key && 
-            (infos[index].grade === tile.grade || !!base.mat.stack)) {
+         while (index < infos.length && infos[index].mat.key === tile.mat.key && infos[index].grade === tile.grade) {
             flags += infos[index].flag;
             index ++;
          }
