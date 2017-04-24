@@ -48,6 +48,18 @@ define([
          return 9 * this.direction;
       },
 
+      sendPosition: function(conn) {
+         localStorage.setItem('spawn', JSON.stringify([this.targetTileX, this.targetTileY]));
+         if (conn) {
+            conn.emit('player_pos', {
+               x: this.targetTileX,
+               y: this.targetTileY,
+               direction: this.direction,
+               uuid: this.entity.uuid
+            });
+         }
+      },
+
       walkToTile: function(world, newTileX, newTileY) {
          if (newTileX < 0) newTileX = 0;
          if (newTileY < 0) newTileY = 0;
@@ -74,14 +86,7 @@ define([
 
             this.walkToTile(world, this.tileX + dx, this.tileY + dy);
 
-            if (conn) {
-               conn.emit('player_pos', {
-                  x: this.targetTileX,
-                  y: this.targetTileY,
-                  direction: this.direction,
-                  uuid: this.entity.uuid
-               });
-            }
+            this.sendPosition(conn);
          }
       },
 

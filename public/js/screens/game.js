@@ -95,10 +95,11 @@ define([
             }
          }
 
-         character.tileX = Math.floor(spawn[0]);
-         character.tileY = Math.floor(spawn[1]);
+         character.targetTileX = character.tileX = Math.floor(spawn[0]);
+         character.targetTileY = character.tileY = Math.floor(spawn[1]);
          this.mainChar.position.x = character.tileX * TerrainHelper.tilesize;
          this.mainChar.position.y = character.tileY * TerrainHelper.tilesize;
+         character.sendPosition(this.connection);
 
          this.camera.x = this.mainChar.position.x;
          this.camera.y = this.mainChar.position.y;
@@ -205,8 +206,8 @@ define([
             point.y = Math.floor(point.y / this.mapScale / TerrainHelper.tilesize + 0.5);
          }
          else {
-            point.x = Math.floor((point.x + this.camera.x) / TerrainHelper.tilesize + 0.5);
-            point.y = Math.floor((point.y + this.camera.y) / TerrainHelper.tilesize + 0.5);
+            point.x = Math.floor((point.x + this.camera.x - this.viewport_w / 2) / TerrainHelper.tilesize + 0.5);
+            point.y = Math.floor((point.y + this.camera.y - this.viewport_h / 2) / TerrainHelper.tilesize + 0.5);
          }
 
          if (point.x < 0 || point.y < 0) return;
@@ -289,6 +290,9 @@ define([
          if (!this.world.ready || !TerrainHelper.ready) {
             return;
          }
+
+         this.viewport_w = width;
+         this.viewport_h = height;
 
          if (this.camera.x - width / 2 < 0)
             this.camera.x = width / 2;

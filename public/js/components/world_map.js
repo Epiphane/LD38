@@ -25,6 +25,8 @@ define([
       },
 
       updateTile: function(world, index) {
+         // return this.generate(world);
+
          var x = index % world.width;
          var y = Math.floor(index / world.width);
 
