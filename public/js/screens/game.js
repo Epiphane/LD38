@@ -124,7 +124,6 @@ define([
       },
 
       doEmote: function(player, which) {
-         console.log("Add emoji", which, "at", player.position);
          player.getComponent('Emotion').lifeLeft = 100;
          player.getComponent('Emotion').emojiFrame = which;
       },
