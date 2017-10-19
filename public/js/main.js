@@ -77,4 +77,29 @@ require([
    });
 
    Juicy.Game.setState(new GameScreen(connection)).run();
+
+
+   window.connectMobile = function() {
+      connection.emit('become_mobile', {name: "who cares"});
+      $("#pop-da-corn").show(0);
+      $("#choose-your-fate").hide(0);
+   };
+
+   window.do_pop = function() {
+      connection.emit('do_pop');
+
+      // do juicy animation here or something
+   };
+
+   window.connectBig = function() {
+      connection.emit('become_desktop');
+      $("#pop-da-corn").hide(0);
+      $("#choose-your-fate").hide(0);
+   };
+
+   connection.on('hi_there', function(data) {
+      console.log("yeah this is happening" + JSON.stringify(data));
+
+      $("#dumb-number").html(data)
+   });
 })

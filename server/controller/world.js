@@ -54,4 +54,14 @@ WorldController.update = function(updates) {
    });
 };
 
+WorldController.incrementScore = function() {
+   return World.findById(1)
+   .then((world) => {
+      world.increment({score: 1});
+   })
+   .then((world) => {
+      return world.score;
+   });
+};
+
 module.exports = WorldController;

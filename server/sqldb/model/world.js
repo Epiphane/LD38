@@ -19,6 +19,10 @@ module.exports = function(sequelize, DataTypes) {
         height: {
             type: DataTypes.INTEGER,
             defaultValue: 100
+        },
+        score: {
+           type: DataTypes.INTEGER,
+           defaultValue: 0
         }
     }, {
       instanceMethods: {
