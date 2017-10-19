@@ -16,20 +16,20 @@ require([
    window.GAME_WIDTH = 800;
    window.GAME_HEIGHT = 800;
 
-   Juicy.Game.init(document.getElementById('game-canvas'), GAME_WIDTH, GAME_HEIGHT, {
-      LEFT: 37,
-      UP: 38,
-      RIGHT: 39,
-      DOWN: 40,
-      SPACE: 32,
+   // Juicy.Game.init(document.getElementById('game-canvas'), GAME_WIDTH, GAME_HEIGHT, {
+   //    LEFT: 37,
+   //    UP: 38,
+   //    RIGHT: 39,
+   //    DOWN: 40,
+   //    SPACE: 32,
+   //
+   //    W: 87,
+   //    A: 65,
+   //    S: 83,
+   //    D: 68,
+   // });
 
-      W: 87,
-      A: 65,
-      S: 83,
-      D: 68,
-   });
-
-   document.getElementById('game-canvas').getContext('2d').imageSmoothingEnabled = false;
+   // document.getElementById('game-canvas').getContext('2d').imageSmoothingEnabled = false;
 
    window.onmousewheel = function(e) {
       Juicy.Game.trigger('mousewheel', e);
@@ -76,7 +76,7 @@ require([
       disconnect.hide();
    });
 
-   Juicy.Game.setState(new GameScreen(connection)).run();
+   // Juicy.Game.setState(new GameScreen(connection)).run();
 
 
    window.connectMobile = function() {
