@@ -39,6 +39,11 @@ define([
             $("#dumb-number").html(3);
          });
 
+         connection.on('world_state', function(state) {
+            $("#dumb-number").html(state.score);
+            // and all sorts of other stuff
+         });
+
          connection.on('player_pos_update', function(newPosition) {
             var movingFriend = self.friends[newPosition.uuid];
             if (!movingFriend) {

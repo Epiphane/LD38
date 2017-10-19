@@ -28,6 +28,7 @@ module.exports = function(io, db) {
 
       socket.on('become_mobile', this.becomeMobileClient.bind(this));
       socket.on('become_desktop', this.becomeDesktopClient.bind(this));
+      socket.on('do_pop', this.do_server_pop.bind(this));
    };
 
    Connection.prototype.becomeMobileClient = function() {
@@ -50,7 +51,7 @@ module.exports = function(io, db) {
    Connection.prototype.do_server_pop = function() {
       // Check for boosts, whatever
       WorldController.getWorld().then((world) => {
-         world.increment({score: 1});
+         return world.increment({score: 1});
       })
       .then((world) => {
          // in the future, only send this to desktop clients

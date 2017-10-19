@@ -89,6 +89,7 @@ require([
       connection.emit('do_pop');
 
       // do juicy animation here or something
+      console.log("hi mom");
    };
 
    window.connectBig = function() {
@@ -101,5 +102,9 @@ require([
       console.log("yeah this is happening" + JSON.stringify(data));
 
       $("#dumb-number").html(data)
+   });
+
+   connection.on('world_state', function(world) {
+      $("#dumb-number").html(world.score);
    });
 })

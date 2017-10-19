@@ -43,8 +43,8 @@
          if (y < 0) y = 0;
          if (x >= world.width) x = world.width - 1;
          if (y >= world.width) y = world.width - 1;
-
-         return world.occupants[x + y * world.width];
+         return null;
+         // return world.occupants[x + y * world.width];
       }
 
       ActionController.available = function(world, x, y, inventory) {
